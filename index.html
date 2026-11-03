@@ -1,0 +1,3465 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">Visual Studio Code</title>
+    <style>
+        :root {
+            --bg-title: #323233;
+            --bg-activity: #333333;
+            --bg-sidebar: #252526;
+            --bg-editor: #1e1e1e;
+            --bg-tab-inactive: #2d2d2d;
+            --bg-tab-active: #1e1e1e;
+            --bg-panel: #181818;
+            --bg-statusbar: #007acc;
+            --border-color: #2b2b2b;
+            --border-light: #3e3e42;
+            --text-main: #cccccc;
+            --text-muted: #858585;
+            --text-bright: #ffffff;
+            --accent-blue: #007acc;
+            --accent-focus: #0078d4;
+            --accent-hover: #2a2d2e;
+            --accent-selection: #264f78;
+
+            /* Syntax Highlighting (Dark+) */
+            --hl-kw: #c586c0;
+            --hl-fn: #dcdcaa;
+            --hl-str: #ce9178;
+            --hl-num: #b5cea8;
+            --hl-comment: #6a9955;
+            --hl-builtin: #4ec9b0;
+            --hl-var: #9cdcfe;
+            --hl-const: #569cd6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background: var(--bg-editor);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 13px;
+            user-select: none;
+        }
+
+        /* Main App Shell */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        /* 1. Title Bar */
+        .titlebar {
+            height: 35px;
+            background: var(--bg-title);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 8px;
+            border-bottom: 1px solid #1e1e1e;
+            font-size: 12px;
+            color: #cccccc;
+            z-index: 10;
+        }
+
+        .title-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .app-logo {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .app-logo svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .menu-bar {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .menu-item {
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #cccccc;
+            font-size: 12px;
+        }
+
+        .menu-item:hover {
+            background: #3c3c3c;
+            color: #ffffff;
+        }
+
+        .title-center {
+            flex: 1;
+            max-width: 520px;
+            margin: 0 16px;
+        }
+
+        .search-bar {
+            background: #252526;
+            border: 1px solid #454545;
+            border-radius: 6px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 0 10px;
+            font-size: 12px;
+            color: #999999;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+        }
+
+        .search-bar:hover {
+            border-color: #007acc;
+            background: #2d2d2d;
+            color: #cccccc;
+        }
+
+        .search-bar .key-hint {
+            font-size: 10px;
+            background: #333333;
+            padding: 1px 4px;
+            border-radius: 3px;
+            border: 1px solid #444;
+        }
+
+        .title-right {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .layout-btn {
+            background: transparent;
+            border: none;
+            color: #cccccc;
+            width: 28px;
+            height: 28px;
+            display: grid;
+            place-items: center;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .layout-btn:hover {
+            background: #3c3c3c;
+            color: #ffffff;
+        }
+
+        .window-controls {
+            display: flex;
+            align-items: center;
+            margin-left: 8px;
+        }
+
+        .win-btn {
+            width: 44px;
+            height: 35px;
+            display: grid;
+            place-items: center;
+            color: #cccccc;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .win-btn:hover {
+            background: #3c3c3c;
+            color: #ffffff;
+        }
+
+        .win-btn.close:hover {
+            background: #e81123;
+            color: #ffffff;
+        }
+
+        /* 2. Workspace Layout */
+        .workspace {
+            flex: 1;
+            display: flex;
+            min-height: 0;
+            position: relative;
+        }
+
+        /* 2.1 Activity Bar */
+        .activity-bar {
+            width: 48px;
+            background: var(--bg-activity);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 2px 0 6px;
+            border-right: 1px solid #202020;
+            flex-shrink: 0;
+        }
+
+        .activity-top,
+        .activity-bottom {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .act-icon {
+            width: 48px;
+            height: 48px;
+            display: grid;
+            place-items: center;
+            color: #858585;
+            cursor: pointer;
+            position: relative;
+            background: transparent;
+            border: none;
+            outline: none;
+        }
+
+        .act-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .act-icon:hover {
+            color: #ffffff;
+        }
+
+        .act-icon.active {
+            color: #ffffff;
+        }
+
+        .act-icon.active::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #ffffff;
+        }
+
+        /* 2.2 Primary Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            min-width: 180px;
+            max-width: 450px;
+        }
+
+        .sidebar-header {
+            height: 35px;
+            padding: 0 16px 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.6px;
+            color: #bbbbbb;
+        }
+
+        .sidebar-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .sb-action-btn {
+            background: transparent;
+            border: none;
+            color: #858585;
+            cursor: pointer;
+            width: 22px;
+            height: 22px;
+            display: grid;
+            place-items: center;
+            border-radius: 3px;
+        }
+
+        .sb-action-btn:hover {
+            color: #ffffff;
+            background: #333333;
+        }
+
+        .sb-action-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        /* "NO FOLDER OPENED" Sidebar View */
+        .no-folder-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 10px 16px;
+            color: #cccccc;
+        }
+
+        .no-folder-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .no-folder-desc {
+            font-size: 12.5px;
+            color: #858585;
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        .btn-vs-primary {
+            background: #0e639c;
+            color: #ffffff;
+            border: 1px solid #1177bb;
+            padding: 6px 12px;
+            border-radius: 2px;
+            cursor: pointer;
+            font-size: 12.5px;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .btn-vs-primary:hover {
+            background: #1177bb;
+        }
+
+        .btn-vs-secondary {
+            background: #3c3c3c;
+            color: #cccccc;
+            border: 1px solid #454545;
+            padding: 6px 12px;
+            border-radius: 2px;
+            cursor: pointer;
+            font-size: 12.5px;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .btn-vs-secondary:hover {
+            background: #454545;
+            color: #ffffff;
+        }
+
+        /* Folder Explorer Tree (When Unlocked) */
+        .explorer-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .section-title {
+            height: 24px;
+            padding: 0 10px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #cccccc;
+            cursor: pointer;
+            background: #252526;
+            border-top: 1px solid #1e1e1e;
+        }
+
+        .section-title:hover {
+            color: #ffffff;
+        }
+
+        .section-title svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+            transition: transform 0.1s ease;
+        }
+
+        .file-tree {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 2px 0;
+        }
+
+        .tree-node {
+            height: 24px;
+            display: flex;
+            align-items: center;
+            padding-right: 8px;
+            cursor: pointer;
+            font-size: 12.5px;
+            color: #cccccc;
+            white-space: nowrap;
+            position: relative;
+        }
+
+        .tree-node:hover {
+            background: var(--accent-hover);
+        }
+
+        .tree-node.active {
+            background: #37373d;
+            color: #ffffff;
+        }
+
+        .tree-chevron {
+            width: 16px;
+            height: 16px;
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            color: #858585;
+        }
+
+        .tree-chevron svg {
+            width: 12px;
+            height: 12px;
+            fill: currentColor;
+        }
+
+        .file-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 6px;
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+        }
+
+        .file-icon svg {
+            width: 15px;
+            height: 15px;
+        }
+
+        .file-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+        }
+
+        .file-badge {
+            font-size: 10px;
+            color: #89d185;
+            margin-left: 6px;
+        }
+
+        /* Sidebar lower sections */
+        .sidebar-footer {
+            border-top: 1px solid #333333;
+        }
+
+        .collapsed-section {
+            height: 24px;
+            padding: 0 10px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #cccccc;
+            cursor: pointer;
+            border-top: 1px solid #2d2d2d;
+        }
+
+        .collapsed-section:hover {
+            color: #ffffff;
+        }
+
+        /* 2.3 Editor & Panel Area */
+        .main-workspace {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            background: var(--bg-editor);
+        }
+
+        /* Editor Tabs Bar */
+        .tabs-bar {
+            height: 35px;
+            background: #252526;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #181818;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .tabs-container {
+            display: flex;
+            align-items: center;
+            overflow-x: auto;
+            height: 100%;
+        }
+
+        .tab {
+            height: 35px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 0 12px;
+            background: var(--bg-tab-inactive);
+            border-right: 1px solid #202020;
+            color: #969696;
+            cursor: pointer;
+            font-size: 12px;
+            white-space: nowrap;
+            position: relative;
+            min-width: 120px;
+            max-width: 200px;
+        }
+
+        .tab:hover {
+            background: #303030;
+            color: #ffffff;
+        }
+
+        .tab.active {
+            background: var(--bg-tab-active);
+            color: #ffffff;
+        }
+
+        .tab.active::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #007acc;
+        }
+
+        .tab .tab-title {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+        }
+
+        .tab .tab-close {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            display: grid;
+            place-items: center;
+            color: #858585;
+        }
+
+        .tab .tab-close:hover {
+            background: #444;
+            color: #fff;
+        }
+
+        /* Tab Bar Actions (Right side of tabs) */
+        .editor-actions {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            padding: 0 8px;
+        }
+
+        .editor-action-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: #858585;
+            height: 26px;
+            padding: 0 6px;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .editor-action-btn:hover {
+            color: #ffffff;
+            background: #333333;
+        }
+
+        .editor-action-btn.primary {
+            color: #ffffff;
+            background: #0e639c;
+            border-color: #1177bb;
+        }
+
+        .editor-action-btn.primary:hover {
+            background: #1177bb;
+        }
+
+        .editor-action-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        /* Breadcrumbs */
+        .breadcrumbs {
+            height: 22px;
+            background: var(--bg-editor);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0 16px;
+            font-size: 11px;
+            color: #858585;
+            border-bottom: 1px solid #282828;
+            flex-shrink: 0;
+        }
+
+        .breadcrumb-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+
+        .breadcrumb-item:hover {
+            color: #cccccc;
+        }
+
+        .breadcrumb-sep {
+            color: #666666;
+        }
+
+        /* Editor Viewport Container */
+        .editor-viewport {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            position: relative;
+            min-height: 0;
+        }
+
+        /* 2.3.1 Welcome / Get Started Page */
+        .welcome-page {
+            flex: 1;
+            overflow-y: auto;
+            padding: 40px 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            max-width: 960px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .welcome-heading {
+            font-size: 32px;
+            font-weight: 300;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .welcome-sub {
+            font-size: 14px;
+            color: #858585;
+            margin-bottom: 32px;
+        }
+
+        .welcome-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            width: 100%;
+        }
+
+        .welcome-col-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .welcome-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #cccccc;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid transparent;
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        .welcome-item:hover {
+            background: #2a2d2e;
+            border-color: #007acc;
+            color: #ffffff;
+        }
+
+        .welcome-item-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .welcome-item-left svg {
+            width: 16px;
+            height: 16px;
+            fill: #007acc;
+        }
+
+        .welcome-key {
+            font-size: 11px;
+            color: #858585;
+            background: #252526;
+            border: 1px solid #3c3c3c;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .welcome-card {
+            background: #252526;
+            border: 1px solid #333333;
+            padding: 14px 16px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            cursor: pointer;
+        }
+
+        .welcome-card:hover {
+            border-color: #007acc;
+            background: #2a2d2e;
+        }
+
+        .welcome-card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #3794ff;
+            margin-bottom: 4px;
+        }
+
+        .welcome-card-desc {
+            font-size: 12px;
+            color: #858585;
+            line-height: 1.5;
+        }
+
+        /* 2.3.2 Code Editor Pane */
+        .editor-pane {
+            flex: 1;
+            display: none;
+            overflow: hidden;
+            position: relative;
+            background: var(--bg-editor);
+        }
+
+        .editor-pane.open {
+            display: flex;
+        }
+
+        .code-scroll {
+            flex: 1;
+            overflow: auto;
+            position: relative;
+            font-family: Consolas, "Cascadia Code", "Courier New", monospace;
+            font-size: 13px;
+            line-height: 20px;
+            user-select: text;
+        }
+
+        .code-table {
+            display: table;
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .code-row {
+            display: table-row;
+        }
+
+        .code-row:hover {
+            background: #232323;
+        }
+
+        .code-row.active-line {
+            background: #282828;
+        }
+
+        .line-num {
+            display: table-cell;
+            width: 50px;
+            padding-right: 18px;
+            text-align: right;
+            color: #858585;
+            user-select: none;
+            vertical-align: top;
+            font-size: 12px;
+            line-height: 20px;
+        }
+
+        .code-text {
+            display: table-cell;
+            white-space: pre;
+            color: #d4d4d4;
+            vertical-align: top;
+            line-height: 20px;
+            padding-right: 24px;
+        }
+
+        /* Minimap */
+        .minimap {
+            width: 60px;
+            background: #1e1e1e;
+            border-left: 1px solid #252526;
+            position: relative;
+            overflow: hidden;
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        .minimap-content {
+            font-family: monospace;
+            font-size: 2px;
+            line-height: 3px;
+            color: #555555;
+            padding: 4px;
+            white-space: pre;
+            opacity: 0.7;
+        }
+
+        .minimap-slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            cursor: grab;
+        }
+
+        /* 2.3.3 Side Notes Panel (Split preview for Theory / Explanation) */
+        .notes-pane {
+            width: 420px;
+            background: #252526;
+            border-left: 1px solid #333333;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .notes-pane.open {
+            display: flex;
+        }
+
+        .notes-header {
+            height: 35px;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #202020;
+            border-bottom: 1px solid #333333;
+            font-size: 11px;
+            font-weight: 600;
+            color: #cccccc;
+        }
+
+        .notes-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+            color: #cccccc;
+            line-height: 1.6;
+            font-size: 13px;
+        }
+
+        .notes-body h2 {
+            font-size: 16px;
+            color: #ffffff;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .notes-body h3 {
+            font-size: 12px;
+            color: #4ec9b0;
+            margin: 18px 0 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+
+        .notes-body p {
+            margin-bottom: 10px;
+            color: #cccccc;
+        }
+
+        .notes-card {
+            background: #1e1e1e;
+            border-left: 3px solid #007acc;
+            padding: 10px 14px;
+            margin: 10px 0;
+            border-radius: 0 4px 4px 0;
+            font-size: 12.5px;
+        }
+
+        .notes-card.algorithm {
+            border-left-color: #3794ff;
+            background: #1a1f26;
+            white-space: pre-line;
+            line-height: 1.65;
+            font-family: inherit;
+        }
+
+        .notes-card.tip {
+            border-left-color: #c586c0;
+        }
+
+        /* 2.4 Bottom Terminal Panel */
+        .panel-container {
+            height: 200px;
+            background: var(--bg-panel);
+            border-top: 1px solid #333333;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: height 0.15s ease;
+        }
+
+        .panel-container.maximized {
+            height: 70vh;
+        }
+
+        .panel-header {
+            height: 32px;
+            background: #1e1e1e;
+            border-bottom: 1px solid #2b2b2b;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            font-size: 11px;
+            user-select: none;
+        }
+
+        .panel-tabs {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            height: 100%;
+        }
+
+        .panel-tab {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            color: #858585;
+            cursor: pointer;
+            position: relative;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        .panel-tab:hover {
+            color: #cccccc;
+        }
+
+        .panel-tab.active {
+            color: #ffffff;
+        }
+
+        .panel-tab.active::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #ffffff;
+        }
+
+        .panel-tools {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .panel-tool-btn {
+            background: transparent;
+            border: none;
+            color: #858585;
+            width: 22px;
+            height: 22px;
+            display: grid;
+            place-items: center;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .panel-tool-btn:hover {
+            background: #333333;
+            color: #ffffff;
+        }
+
+        .panel-tool-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        /* Interactive Terminal Screen */
+        .terminal-screen {
+            flex: 1;
+            background: #181818;
+            padding: 8px 16px;
+            overflow-y: auto;
+            font-family: Consolas, "Cascadia Code", "Courier New", monospace;
+            font-size: 12.5px;
+            line-height: 18px;
+            color: #cccccc;
+            cursor: text;
+            user-select: text;
+        }
+
+        .term-line {
+            margin-bottom: 2px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .term-prompt-line {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .term-prompt {
+            color: #89d185;
+            font-weight: 600;
+            margin-right: 6px;
+            user-select: none;
+        }
+
+        .term-prompt.ps {
+            color: #dcdcaa;
+        }
+
+        .term-input-wrapper {
+            display: inline-flex;
+            align-items: center;
+            position: relative;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .term-input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #ffffff;
+            font-family: inherit;
+            font-size: inherit;
+            width: 100%;
+            padding: 0;
+            margin: 0;
+            caret-color: #ffffff;
+        }
+
+        /* 3. Status Bar */
+        .statusbar {
+            height: 22px;
+            background: var(--bg-statusbar);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            font-size: 11px;
+            color: #ffffff;
+            white-space: nowrap;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .status-left,
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            padding: 0 4px;
+            height: 22px;
+        }
+
+        .status-item:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .status-remote {
+            background: #16825d;
+            color: #ffffff;
+            margin-left: -10px;
+            padding: 0 10px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .status-remote:hover {
+            background: #1b9a6e;
+        }
+
+        /* 4. Command Palette (Ctrl+Shift+P / Search bar click) */
+        .command-palette-modal {
+            position: fixed;
+            top: 36px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 580px;
+            max-width: 90vw;
+            background: #1f1f1f;
+            border: 1px solid #454545;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.65);
+            border-radius: 6px;
+            z-index: 999;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .command-palette-modal.open {
+            display: flex;
+        }
+
+        .cp-input-box {
+            padding: 10px 12px;
+            border-bottom: 1px solid #333333;
+            display: flex;
+            align-items: center;
+            background: #252526;
+        }
+
+        .cp-input {
+            width: 100%;
+            background: #3c3c3c;
+            border: 1px solid #007acc;
+            color: #ffffff;
+            padding: 6px 10px;
+            font-size: 13px;
+            outline: none;
+            border-radius: 3px;
+            font-family: inherit;
+        }
+
+        .cp-list {
+            max-height: 320px;
+            overflow-y: auto;
+            padding: 4px 0;
+        }
+
+        .cp-item {
+            padding: 7px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            color: #cccccc;
+            font-size: 12.5px;
+        }
+
+        .cp-item:hover,
+        .cp-item.selected {
+            background: #04395e;
+            color: #ffffff;
+        }
+
+        .cp-item .cp-shortcut {
+            font-size: 11px;
+            color: #858585;
+        }
+
+        /* 5. VS Code Toast Notification */
+        .vscode-toast {
+            position: fixed;
+            bottom: 34px;
+            right: 20px;
+            background: #252526;
+            border: 1px solid #454545;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+            padding: 10px 16px;
+            border-radius: 4px;
+            color: #ffffff;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .vscode-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .vscode-toast svg {
+            width: 16px;
+            height: 16px;
+            fill: #89d185;
+        }
+
+        /* Syntax Highlight Colors */
+        .hl-kw {
+            color: var(--hl-kw);
+        }
+
+        .hl-fn {
+            color: var(--hl-fn);
+        }
+
+        .hl-str {
+            color: var(--hl-str);
+        }
+
+        .hl-num {
+            color: var(--hl-num);
+        }
+
+        .hl-comment {
+            color: var(--hl-comment);
+            font-style: italic;
+        }
+
+        .hl-builtin {
+            color: var(--hl-builtin);
+        }
+
+        .hl-var {
+            color: var(--hl-var);
+        }
+
+        .hl-const {
+            color: var(--hl-const);
+        }
+
+        .hl-dec {
+            color: var(--hl-fn);
+        }
+
+        /* Scrollbar styles matching VS Code */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(121, 121, 121, 0.4);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(100, 100, 100, 0.7);
+        }
+    </style>
+<meta name="description" content="An interactive VS Code-inspired workspace for AI lab practicals and Python revision.">
+<meta name="theme-color" content="#1e1e1e">
+<style id="vscode-polish-overrides">
+/* Subtle finish: retain the familiar VS Code Dark+ palette and layout. */
+:root {
+  --bg-title: #323233;
+  --bg-activity: #333333;
+  --bg-sidebar: #252526;
+  --bg-editor: #1e1e1e;
+  --bg-panel: #181818;
+  --border-color: #303031;
+  --border-light: #454545;
+  --accent-blue: #007acc;
+  --accent-hover: #2a2d2e;
+  --accent-selection: #264f78;
+}
+
+html { color-scheme: dark; }
+body { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
+button, input, textarea { font: inherit; }
+button { -webkit-tap-highlight-color: transparent; }
+:where(button, input, textarea, [role="button"], .menu-item, .welcome-item, .tree-node, .panel-tab, .act-icon, .status-item, .search-bar):focus-visible {
+  outline: 1px solid #007fd4;
+  outline-offset: -1px;
+}
+
+/* Better hierarchy without adding non-VS-Code styling. */
+.titlebar { box-shadow: 0 1px 0 rgba(0,0,0,.18); }
+.search-bar { box-shadow: inset 0 1px 0 rgba(255,255,255,.025); }
+.search-bar:focus-within { border-color: #007fd4; }
+.sidebar { border-right-color: #303031; }
+.sidebar-header { user-select: none; }
+.act-icon, .layout-btn, .sb-action-btn, .panel-tool-btn, .editor-action-btn, .win-btn {
+  transition: color .12s ease, background-color .12s ease, border-color .12s ease;
+}
+.act-icon.active::before { width: 2px; }
+.tab { border-right-color: #252526; }
+.tab.active::before { height: 2px; }
+.tab.active { box-shadow: inset 0 -1px 0 #1e1e1e; }
+.editor-action-btn.primary { box-shadow: inset 0 1px 0 rgba(255,255,255,.06); }
+.welcome-heading { letter-spacing: -.55px; }
+.welcome-item { background: rgba(255,255,255,.018); }
+.welcome-card { box-shadow: 0 1px 0 rgba(255,255,255,.015); }
+.breadcrumbs { user-select: none; }
+.panel-container { border-top-color: #343434; }
+.panel-header { box-shadow: inset 0 1px 0 rgba(255,255,255,.015); }
+.notes-header { letter-spacing: .35px; }
+.command-palette-modal { backdrop-filter: blur(4px); }
+.cp-input { box-shadow: inset 0 1px 2px rgba(0,0,0,.25); }
+.vscode-toast { border-color: #454545; box-shadow: 0 8px 24px rgba(0,0,0,.42); }
+
+/* Scrollbars closer to the editor's understated native appearance. */
+* { scrollbar-color: rgba(121,121,121,.42) transparent; scrollbar-width: thin; }
+::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-thumb { border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background-clip: padding-box; }
+
+/* Responsive adaptations; desktop remains the primary VS Code-like view. */
+@media (max-width: 1180px) {
+  .sidebar { width: 225px; }
+  .notes-pane { width: 340px; }
+  .welcome-page { padding: 32px 36px; }
+  .welcome-columns { gap: 28px; }
+  .minimap { width: 48px; }
+}
+@media (max-width: 900px) {
+  .sidebar { width: 205px; min-width: 165px; }
+  .activity-bar { width: 44px; }
+  .act-icon { width: 44px; height: 44px; }
+  .notes-pane.open { width: min(320px, 42vw); }
+  .welcome-page { padding: 28px 24px; }
+  .welcome-columns { gap: 20px; }
+  .panel-container { height: 175px; }
+  .status-left, .status-right { gap: 7px; }
+}
+@media (max-width: 680px) {
+  .titlebar { padding-left: 6px; }
+  .title-left { gap: 5px; }
+  .menu-bar { gap: 0; }
+  .menu-item { padding: 4px 5px; font-size: 11px; }
+  .title-center { margin: 0 6px; max-width: none; }
+  .search-bar { gap: 5px; padding: 0 7px; }
+  .search-bar .key-hint { display: none; }
+  .title-right .layout-btn { display: none; }
+  .win-btn { width: 30px; }
+  .activity-bar { width: 40px; }
+  .act-icon { width: 40px; height: 42px; }
+  .act-icon svg { width: 21px; height: 21px; }
+  .sidebar { width: 190px; min-width: 150px; }
+  .welcome-page { padding: 24px 18px; }
+  .welcome-heading { font-size: 26px; }
+  .welcome-columns { grid-template-columns: 1fr; gap: 22px; }
+  .welcome-sub { margin-bottom: 22px; }
+  .notes-pane.open { position: absolute; inset: 0 0 0 auto; width: min(330px, 78vw); z-index: 8; box-shadow: -12px 0 28px rgba(0,0,0,.28); }
+  .minimap { display: none; }
+  .panel-container { height: 150px; }
+  .panel-tabs { gap: 12px; }
+  .panel-header { padding: 0 10px; }
+  .terminal-screen { padding: 8px 10px; }
+  .statusbar { padding: 0 6px; font-size: 10px; }
+  .status-left, .status-right { gap: 4px; }
+  .status-item { padding: 0 2px; }
+}
+@media (max-width: 480px) {
+  .menu-bar .menu-item:nth-child(n+4) { display: none; }
+  .title-left .app-logo { width: 14px; }
+  .title-center { min-width: 70px; }
+  #searchBarText { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sidebar { width: 164px; min-width: 138px; }
+  .sidebar-header { padding-left: 12px; }
+  .welcome-page { padding: 20px 14px; }
+  .welcome-heading { font-size: 23px; }
+  .welcome-item { padding: 8px; }
+  .panel-tabs { gap: 9px; }
+  .panel-tab { font-size: 10px; }
+  .status-right .status-item:nth-child(n+3), .status-left .status-item:nth-child(n+3) { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}
+</style>
+</head>
+
+<body>
+
+    <div class="app-container">
+
+        <!-- 1. TITLE BAR -->
+        <header class="titlebar">
+            <div class="title-left">
+                <div class="app-logo" title="Visual Studio Code">
+                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <mask id="mask0" mask-type="alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="100"
+                            height="100">
+                            <path fill-rule="evenodd" clip-rule="evenodd"
+                                d="M70.9119 99.3171C72.4869 99.9307 74.2828 99.8914 75.8725 99.1264L96.4608 89.2197C98.6242 88.1787 100 85.9892 100 83.5872V16.4133C100 14.0113 98.6243 11.8218 96.4609 10.7808L75.8725 0.873756C73.7862 -0.130129 71.3446 0.11576 69.5135 1.44695C69.252 1.63711 69.0028 1.84943 68.769 2.08341L29.3551 38.0415L12.1872 25.0096C10.589 23.7965 8.35363 23.8959 6.86933 25.2461L1.36303 30.2549C-0.452552 31.9064 -0.454633 34.7627 1.35853 36.417L16.2471 50.0001L1.35853 63.5832C-0.454633 65.2374 -0.452552 68.0938 1.36303 69.7453L6.86933 74.7541C8.35363 76.1043 10.589 76.2037 12.1872 74.9905L29.3551 61.9587L68.769 97.9167C69.3925 98.5406 70.1246 99.0104 70.9119 99.3171ZM75.0152 27.2989L45.1091 50.0001L75.0152 72.7012V27.2989Z"
+                                fill="white" />
+                        </mask>
+                        <g mask="url(#mask0)">
+                            <path
+                                d="M96.4614 10.7962L75.8569 0.875542C73.4719 -0.272773 70.6217 0.211611 68.75 2.08333L1.29858 63.5832C-0.515693 65.2373 -0.513607 68.0937 1.30308 69.7452L6.81272 74.754C8.29793 76.1042 10.5347 76.2036 12.1338 74.9905L93.3609 13.3699C96.086 11.3026 100 13.2462 100 16.6667V16.4275C100 14.0265 98.6246 11.8378 96.4614 10.7962Z"
+                                fill="#0065A9" />
+                            <g filter="url(#filter0_d)">
+                                <path
+                                    d="M96.4614 89.2038L75.8569 99.1245C73.4719 100.273 70.6217 99.7884 68.75 97.9167L1.29858 36.4169C-0.515693 34.7627 -0.513607 31.9063 1.30308 30.2548L6.81272 25.246C8.29793 23.8958 10.5347 23.7964 12.1338 25.0095L93.3609 86.6301C96.086 88.6974 100 86.7538 100 83.3334V83.5726C100 85.9735 98.6246 88.1622 96.4614 89.2038Z"
+                                    fill="#007ACC" />
+                            </g>
+                            <g filter="url(#filter1_d)">
+                                <path
+                                    d="M75.8578 99.1263C73.4721 100.274 70.6219 99.7885 68.75 97.9166C71.0564 100.223 75 98.5895 75 95.3278V4.67213C75 1.41039 71.0564 -0.223106 68.75 2.08329C70.6219 0.211402 73.4721 -0.273666 75.8578 0.873633L96.4587 10.7807C98.6234 11.8217 100 14.0112 100 16.4132V83.5871C100 85.9891 98.6234 88.1786 96.4586 89.2196L75.8578 99.1263Z"
+                                    fill="#1F9CF0" />
+                            </g>
+                            <g style="mix-blend-mode:overlay" opacity="0.25">
+                                <path fill-rule="evenodd" clip-rule="evenodd"
+                                    d="M70.8511 99.3171C72.4261 99.9306 74.2221 99.8913 75.8117 99.1264L96.4 89.2197C98.5634 88.1787 99.9392 85.9892 99.9392 83.5871V16.4133C99.9392 14.0112 98.5635 11.8217 96.4001 10.7807L75.8117 0.873695C73.7255 -0.13019 71.2838 0.115699 69.4527 1.44688C69.1912 1.63705 68.942 1.84937 68.7082 2.08335L29.2943 38.0414L12.1264 25.0096C10.5283 23.7964 8.29285 23.8959 6.80855 25.246L1.30225 30.2548C-0.513334 31.9064 -0.515415 34.7627 1.29775 36.4169L16.1863 50L1.29775 63.5832C-0.515415 65.2374 -0.513334 68.0937 1.30225 69.7452L6.80855 74.754C8.29285 76.1042 10.5283 76.2036 12.1264 74.9905L29.2943 61.9586L68.7082 97.9167C69.3317 98.5405 70.0638 99.0104 70.8511 99.3171ZM74.9544 27.2989L45.0483 50L74.9544 72.7012V27.2989Z"
+                                    fill="url(#paint0_linear)" />
+                            </g>
+                        </g>
+                        <defs>
+                            <filter id="filter0_d" x="-8.39411" y="15.8291" width="116.727" height="92.2456"
+                                filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                                <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                                <feColorMatrix in="SourceAlpha" type="matrix"
+                                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" />
+                                <feOffset />
+                                <feGaussianBlur stdDeviation="4.16667" />
+                                <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0" />
+                                <feBlend mode="overlay" in2="BackgroundImageFix" result="effect1_dropShadow" />
+                                <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape" />
+                            </filter>
+                            <filter id="filter1_d" x="60.4167" y="-8.07558" width="47.9167" height="116.151"
+                                filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                                <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                                <feColorMatrix in="SourceAlpha" type="matrix"
+                                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" />
+                                <feOffset />
+                                <feGaussianBlur stdDeviation="4.16667" />
+                                <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0" />
+                                <feBlend mode="overlay" in2="BackgroundImageFix" result="effect1_dropShadow" />
+                                <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape" />
+                            </filter>
+                            <linearGradient id="paint0_linear" x1="49.9392" y1="0.257812" x2="49.9392" y2="99.7423"
+                                gradientUnits="userSpaceOnUse">
+                                <stop stop-color="white" />
+                                <stop offset="1" stop-color="white" stop-opacity="0" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <nav class="menu-bar">
+                    <span class="menu-item" onclick="showToast('File menu')">File</span>
+                    <span class="menu-item" onclick="showToast('Edit menu')">Edit</span>
+                    <span class="menu-item" onclick="showToast('Selection menu')">Selection</span>
+                    <span class="menu-item" onclick="toggleNotesPanel()">View</span>
+                    <span class="menu-item" onclick="openCommandPalette()">Go</span>
+                    <span class="menu-item" onclick="runCurrentScript()">Run</span>
+                    <span class="menu-item" onclick="focusTerminal()">Terminal</span>
+                    <span class="menu-item" onclick="showHelpModal()">Help</span>
+                </nav>
+            </div>
+
+            <div class="title-center">
+                <div class="search-bar" onclick="openCommandPalette()" id="searchBarBtn">
+                    <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
+                        <path
+                            d="M11.5 7a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0zm-.82 4.74a6 6 0 1 0-1.06 1.06l3.79 3.79a.75.75 0 0 0 1.06-1.06l-3.79-3.79z" />
+                    </svg>
+                    <span id="searchBarText">Visual Studio Code</span>
+                    <span class="key-hint">Ctrl+P</span>
+                </div>
+            </div>
+
+            <div class="title-right">
+                <button class="layout-btn" title="Toggle Primary Side Bar (Ctrl+B)" onclick="toggleSidebar()">
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+                        <path
+                            d="M1 3.5A1.5 1.5 0 0 1 2.5 2h11A1.5 1.5 0 0 1 15 3.5v9a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-9zM2.5 3a.5.5 0 0 0-.5.5V12.5a.5.5 0 0 0 .5.5H5V3H2.5zm3.5 10h7.5a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5H6v10z" />
+                    </svg>
+                </button>
+                <button class="layout-btn" title="Toggle Panel (Ctrl+J)" onclick="togglePanel()">
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+                        <path
+                            d="M1 3.5A1.5 1.5 0 0 1 2.5 2h11A1.5 1.5 0 0 1 15 3.5v9a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-9zm1.5-.5a.5.5 0 0 0-.5.5V9h12V3.5a.5.5 0 0 0-.5-.5h-11zm11.5 7H2v2.5a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 .5-.5V10z" />
+                    </svg>
+                </button>
+                <div class="window-controls">
+                    <div class="win-btn" title="Minimize" onclick="showToast('Minimized')">―</div>
+                    <div class="win-btn" id="winMaximizeBtn" title="Maximize (Full Screen)"
+                        onclick="toggleFullScreen()">&#9633;</div>
+                    <div class="win-btn close" title="Close" onclick="resetToInitialState()">✕</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 2. WORKSPACE -->
+        <div class="workspace">
+
+            <!-- 2.1 ACTIVITY BAR -->
+            <aside class="activity-bar">
+                <div class="activity-top">
+                    <button class="act-icon active" id="actExplorer" title="Explorer (Ctrl+Shift+E)">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M19 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 14H5V8h14v10zm0-12H5V6h14v0z" />
+                            <path d="M7 10h4v2H7zm0 4h7v2H7z" />
+                        </svg>
+                    </button>
+                    <button class="act-icon" title="Search (Ctrl+Shift+F)" onclick="openCommandPalette()">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                        </svg>
+                    </button>
+                    <button class="act-icon" title="Source Control (Ctrl+Shift+G)"
+                        onclick="showToast('Source Control: No git repository found')">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M19 13a3 3 0 0 0-2.82 2H11a3 3 0 0 1-3-3V9.82A3 3 0 0 0 9 7a3 3 0 0 0-6 0 3 3 0 0 0 1 2.24V14a5 5 0 0 0 5 5h7.18A3 3 0 0 0 19 21a3 3 0 0 0 0-6zm-13-8a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm13 14a1 1 0 1 1 0-2 1 1 0 0 1 0 2z" />
+                        </svg>
+                    </button>
+                    <button class="act-icon" title="Run and Debug (Ctrl+Shift+D)" onclick="runCurrentScript()">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M19 8h-1.81a5.985 5.985 0 0 0-1.82-1.96l.93-.93a.996.996 0 1 0-1.41-1.41l-1.47 1.47C12.72 5.06 12 5 12 5s-.72.06-1.42.17L9.11 3.7a.996.996 0 1 0-1.41 1.41l.93.93C7.55 6.64 6.94 7.25 6.81 8H5a1 1 0 0 0 0 2h1.09c-.05.33-.09.66-.09 1v1H5a1 1 0 0 0 0 2h1v1c0 .34.04.67.09 1H5a1 1 0 0 0 0 2h1.81c1.04 1.79 2.97 3 5.19 3s4.15-1.21 5.19-3H19a1 1 0 0 0 0-2h-1.09c.05-.33.09-.66.09-1v-1h1a1 1 0 0 0 0-2h-1v-1c0-.34-.04-.67-.09-1H19a1 1 0 0 0 0-2zm-6 8h-2v-2h2v2zm0-4h-2v-2h2v2z" />
+                        </svg>
+                    </button>
+                    <button class="act-icon" title="Extensions (Ctrl+Shift+X)"
+                        onclick="showToast('Extensions marketplace ready')">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5a2.5 2.5 0 0 0-5 0V5H4c-1.1 0-1.99.9-1.99 2v3.8H3.5c1.49 0 2.7 1.21 2.7 2.7s-1.21 2.7-2.7 2.7H2V20c0 1.1.9 2 2 2h3.8v-1.5c0-1.49 1.21-2.7 2.7-2.7 1.49 0 2.7 1.21 2.7 2.7V22H17c1.1 0 2-.9 2-2v-4h1.5a2.5 2.5 0 0 0 0-5z" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="activity-bottom">
+                    <button class="act-icon" title="Accounts" onclick="showToast('Signed in to Visual Studio Code')">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+                        </svg>
+                    </button>
+                    <button class="act-icon" title="Manage Settings" onclick="showToast('VS Code Settings')">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
+                        </svg>
+                    </button>
+                </div>
+            </aside>
+
+            <!-- 2.2 SIDEBAR -->
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <span>EXPLORER</span>
+                    <div class="sidebar-actions">
+                        <button class="sb-action-btn" title="More Actions..." onclick="showToast('Explorer options')">
+                            <svg viewBox="0 0 16 16">
+                                <path
+                                    d="M3 8a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0zm5 0a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0zm5 0a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- NO FOLDER OPENED PANEL (Initial State) -->
+                <div class="no-folder-panel" id="noFolderSidebar">
+                    <div class="no-folder-title">NO FOLDER OPENED</div>
+                    <div class="no-folder-desc">You have not yet opened a folder. Open a folder to start working with
+                        your files.</div>
+                    <button class="btn-vs-primary" onclick="triggerOpenFolder()">Open Folder</button>
+                    <button class="btn-vs-secondary" onclick="showToast('Clone repository: enter Git URL')">Clone
+                        Repository</button>
+
+                </div>
+
+                <!-- FOLDER EXPLORER TREE (When Unlocked) -->
+                <div class="explorer-section" id="unlockedSidebar" style="display: none;">
+                    <div class="section-title" id="workspaceRootHeader">
+                        <svg viewBox="0 0 16 16">
+                            <path d="M4 6l4 4 4-4z" />
+                        </svg>
+                        <span>AI_LAB_PRACTICALS</span>
+                    </div>
+                    <div class="file-tree" id="fileTreeContainer">
+                        <!-- Dynamically populated by JS -->
+                    </div>
+                </div>
+
+                <div class="sidebar-footer">
+                    <div class="collapsed-section" onclick="showToast('Outline: No symbols available')">
+
+                        <span>OUTLINE</span>
+                    </div>
+                    <div class="collapsed-section" onclick="showToast('Timeline: No file selected')">
+
+                        <span>TIMELINE</span>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- 2.3 MAIN WORKSPACE (EDITOR + PANEL) -->
+            <main class="main-workspace">
+
+                <!-- Editor Tabs Bar -->
+                <div class="tabs-bar">
+                    <div class="tabs-container" id="tabsContainer">
+                        <!-- Dynamically populated tabs -->
+                    </div>
+                    <div class="editor-actions">
+                        <button class="editor-action-btn primary" id="btnRunCode" title="Run Python File in Terminal"
+                            onclick="runCurrentScript()" style="display:none;">
+                            <svg viewBox="0 0 16 16">
+                                <path d="M4 2.5v11l9-5.5z" />
+                            </svg>
+                            <span>Run</span>
+                        </button>
+                        <button class="editor-action-btn" id="btnCopyCode" title="Copy Python Script"
+                            onclick="copyActiveCode()" style="display:none;">
+                            <svg viewBox="0 0 16 16">
+                                <path
+                                    d="M4 2h7l3 3v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm6 1v3h3L10 3zM3 4v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6.5L10.5 2H5a2 2 0 0 0-2 2z" />
+                            </svg>
+                            <span>Copy Code</span>
+                        </button>
+                        <button class="editor-action-btn" id="btnToggleNotes" title="Toggle Notes & Theory Split View"
+                            onclick="toggleNotesPanel()" style="display:none;">
+                            <svg viewBox="0 0 16 16">
+                                <path
+                                    d="M1 2.5A1.5 1.5 0 0 1 2.5 1h11A1.5 1.5 0 0 1 15 2.5v11a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 13.5v-11zM8 2H2.5a.5.5 0 0 0-.5.5v11a.5.5 0 0 0 .5.5H8V2zm1 0v12h4.5a.5.5 0 0 0 .5-.5v-11a.5.5 0 0 0-.5-.5H9z" />
+                            </svg>
+                            <span>Notes</span>
+                        </button>
+                        <button class="editor-action-btn" title="More Actions" onclick="openCommandPalette()">
+                            <svg viewBox="0 0 16 16">
+                                <path
+                                    d="M3 8a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0zm5 0a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0zm5 0a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Breadcrumbs -->
+                <div class="breadcrumbs" id="breadcrumbs" style="display:none;">
+                    <span class="breadcrumb-item">AI_LAB_PRACTICALS</span>
+                    <span class="breadcrumb-sep">›</span>
+                    <span class="breadcrumb-item">01_vacuum_cleaner.py</span>
+                </div>
+
+                <!-- Editor Viewport -->
+                <div class="editor-viewport">
+
+                    <!-- 2.3.1 Welcome / Get Started Page (Default initial view) -->
+                    <div class="welcome-page" id="welcomePage">
+                        <h1 class="welcome-heading">Visual Studio Code</h1>
+                        <p class="welcome-sub">Editing evolved</p>
+
+                        <div class="welcome-columns">
+                            <div class="welcome-col">
+                                <div class="welcome-col-title">Start</div>
+
+                                <div class="welcome-item" onclick="showToast('Created Untitled file')">
+                                    <div class="welcome-item-left">
+                                        <svg viewBox="0 0 16 16">
+                                            <path
+                                                d="M9 1H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7L9 1zm1 1.4L13.6 6H10V2.4zM14 13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h6v5h5v6z" />
+                                        </svg>
+                                        <span>New File...</span>
+                                    </div>
+                                    <span class="welcome-key">Ctrl+N</span>
+                                </div>
+
+                                <div class="welcome-item" onclick="showToast('Open File dialog')">
+                                    <div class="welcome-item-left">
+                                        <svg viewBox="0 0 16 16">
+                                            <path
+                                                d="M14 4h-4.38L8.27 2.18A1.5 1.5 0 0 0 7.22 1.7H2A1.5 1.5 0 0 0 .5 3.2v9.6A1.5 1.5 0 0 0 2 14.3h12a1.5 1.5 0 0 0 1.5-1.5V5.5A1.5 1.5 0 0 0 14 4z" />
+                                        </svg>
+                                        <span>Open File...</span>
+                                    </div>
+                                    <span class="welcome-key">Ctrl+O</span>
+                                </div>
+
+                                <div class="welcome-item" onclick="triggerOpenFolder()">
+                                    <div class="welcome-item-left">
+                                        <svg viewBox="0 0 16 16">
+                                            <path
+                                                d="M14 4h-4.38L8.27 2.18A1.5 1.5 0 0 0 7.22 1.7H2A1.5 1.5 0 0 0 .5 3.2v9.6A1.5 1.5 0 0 0 2 14.3h12a1.5 1.5 0 0 0 1.5-1.5V5.5A1.5 1.5 0 0 0 14 4z" />
+                                        </svg>
+                                        <span>Open Folder...</span>
+                                    </div>
+                                    <span class="welcome-key">Ctrl+K Ctrl+O</span>
+                                </div>
+
+                                <div class="welcome-item" onclick="showToast('Clone repository dialog')">
+                                    <div class="welcome-item-left">
+                                        <svg viewBox="0 0 16 16">
+                                            <path
+                                                d="M11.75 8a1.75 1.75 0 1 0-1.75-1.75c0 .37.11.71.3 1H5.7a1.75 1.75 0 1 0 0 1.5h4.6c-.19.29-.3.63-.3 1a1.75 1.75 0 1 0 1.75-1.75z" />
+                                        </svg>
+                                        <span>Clone Git Repository...</span>
+                                    </div>
+                                </div>
+
+                                <div class="welcome-col-title" style="margin-top:24px;">Recent</div>
+                                <div style="font-size:12.5px; color:#666; padding-left:4px;">No recent folders</div>
+                            </div>
+
+                            <div class="welcome-col">
+                                <div class="welcome-col-title">Walkthroughs</div>
+
+                                <div class="welcome-card" onclick="triggerOpenFolder()">
+                                    <div class="welcome-card-title">Get Started with Python</div>
+                                    <div class="welcome-card-desc">Write, run, and debug Python code with language
+                                        features, virtual environments, and full terminal support.</div>
+                                </div>
+
+                                <div class="welcome-card" onclick="showToast('Settings & Customization')">
+                                    <div class="welcome-card-title">Customize Your Tools and Colors</div>
+                                    <div class="welcome-card-desc">Personalize your editor with color themes,
+                                        keybindings, and extensions.</div>
+                                </div>
+
+                                <div class="welcome-card" onclick="openCommandPalette()">
+                                    <div class="welcome-card-title">Find and Run All Commands</div>
+                                    <div class="welcome-card-desc">Access the Command Palette with <code
+                                            style="color:#ccc;">Ctrl+Shift+P</code> to run any command instantly.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2.3.2 Code Editor Pane (When a file is open) -->
+                    <div class="editor-pane" id="editorPane">
+                        <div class="code-scroll" id="codeScroll">
+                            <div class="code-table" id="codeTable">
+                                <!-- Rendered code rows -->
+                            </div>
+                        </div>
+                        <!-- Minimap -->
+                        <div class="minimap" id="minimap">
+                            <div class="minimap-slider" id="minimapSlider"></div>
+                            <div class="minimap-content" id="minimapContent"></div>
+                        </div>
+                    </div>
+
+                    <!-- 2.3.3 Notes / Explanation Side Pane -->
+                    <div class="notes-pane" id="notesPane">
+                        <div class="notes-header">
+                            <span id="notesHeaderTitle">THEORY & REVISION NOTES</span>
+                            <button class="sb-action-btn" title="Close Notes" onclick="toggleNotesPanel()">✕</button>
+                        </div>
+                        <div class="notes-body" id="notesBody">
+                            <!-- Dynamic notes content -->
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- 2.4 BOTTOM PANEL (TERMINAL) -->
+                <div class="panel-container" id="panelContainer">
+                    <div class="panel-header">
+                        <div class="panel-tabs">
+                            <div class="panel-tab" onclick="switchPanelTab('problems')">PROBLEMS <span
+                                    style="font-size:10px; opacity:0.8; margin-left:3px;">0</span></div>
+                            <div class="panel-tab" onclick="switchPanelTab('output')">OUTPUT</div>
+                            <div class="panel-tab" onclick="switchPanelTab('debug')">DEBUG CONSOLE</div>
+                            <div class="panel-tab active" id="tabTerminal" onclick="switchPanelTab('terminal')">TERMINAL
+                            </div>
+                            <div class="panel-tab" onclick="switchPanelTab('ports')">PORTS</div>
+                        </div>
+                        <div class="panel-tools">
+                            <span style="font-size:11px; color:#aaa; margin-right:8px;">1: pwsh</span>
+                            <button class="panel-tool-btn" title="New Terminal" onclick="clearTerminalScreen()">
+                                <svg viewBox="0 0 16 16">
+                                    <path
+                                        d="M8 2a.5.5 0 0 1 .5.5V7h4.5a.5.5 0 0 1 0 1H8.5v4.5a.5.5 0 0 1-1 0V8H3a.5.5 0 0 1 0-1h4.5V2.5A.5.5 0 0 1 8 2z" />
+                                </svg>
+                            </button>
+                            <button class="panel-tool-btn" title="Clear Terminal" onclick="clearTerminalScreen()">
+                                <svg viewBox="0 0 16 16">
+                                    <path
+                                        d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
+                                    <path fill-rule="evenodd"
+                                        d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4L4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z" />
+                                </svg>
+                            </button>
+                            <button class="panel-tool-btn" title="Toggle Size" onclick="togglePanelMaximize()">
+                                <svg viewBox="0 0 16 16">
+                                    <path d="M3 3h10v1H3zm0 9h10v1H3z" />
+                                </svg>
+                            </button>
+                            <button class="panel-tool-btn" title="Close Panel" onclick="togglePanel()">
+                                <svg viewBox="0 0 16 16">
+                                    <path
+                                        d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="terminal-screen" id="terminalScreen" onclick="focusTerminal()">
+                        <div id="termHistory">
+                            <div class="term-line" style="color:#858585;">Windows PowerShell</div>
+                            <div class="term-line" style="color:#858585;">Copyright (C) Microsoft Corporation. All
+                                rights reserved.</div>
+                            <div class="term-line" style="color:#858585; margin-bottom: 8px;">Try the new cross-platform
+                                PowerShell https://aka.ms/pscore6</div>
+                        </div>
+                        <div class="term-prompt-line">
+                            <span class="term-prompt ps" id="termPromptPath">PS C:\Users\abhij&gt;</span>
+                            <div class="term-input-wrapper">
+                                <input type="text" id="terminalInput" class="term-input" autocomplete="off"
+                                    spellcheck="false" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+
+        </div>
+
+        <!-- 3. Status Bar -->
+        <footer class="statusbar">
+            <div class="status-left">
+                <div class="status-remote" title="Open a Remote Window">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M4.5 11l-3-3 3-3 .7.7L2.9 8l2.3 2.3-.7.7zm7 0l3-3-3-3-.7.7 2.3 2.3-2.3 2.3.7.7z" />
+                    </svg>
+                    <span>WSL: Ubuntu</span>
+                </div>
+                <div class="status-item" id="statusBranch" title="Git Repository" style="display:none;">
+                    <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
+                        <path
+                            d="M11.75 8a1.75 1.75 0 1 0-1.75-1.75c0 .37.11.71.3 1H5.7a1.75 1.75 0 1 0 0 1.5h4.6c-.19.29-.3.63-.3 1a1.75 1.75 0 1 0 1.75-1.75zM4 6.75a.75.75 0 1 1 1.5 0 .75.75 0 0 1-1.5 0zm7.75 3a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5zm0-4.5a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5z" />
+                    </svg>
+                    <span>main*</span>
+                </div>
+                <div class="status-item" title="0 Errors, 0 Warnings">
+                    <span>⊗ 0 ⚠ 0</span>
+                </div>
+            </div>
+
+            <div class="status-right">
+                <div class="status-item" id="statusLnCol" style="display:none;">Ln 1, Col 1</div>
+                <div class="status-item">Spaces: 4</div>
+                <div class="status-item">UTF-8</div>
+                <div class="status-item">CRLF</div>
+                <div class="status-item" id="statusLang">Ready</div>
+                <div class="status-item" title="Notifications">
+                    <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor">
+                        <path
+                            d="M8 1.5A3.5 3.5 0 0 0 4.5 5v2.29l-.85 1.71A1 1 0 0 0 4.5 10.5h7a1 1 0 0 0 .85-1.5L11.5 7.29V5A3.5 3.5 0 0 0 8 1.5zM6.5 12a1.5 1.5 0 0 0 3 0h-3z" />
+                    </svg>
+                </div>
+            </div>
+        </footer>
+
+        <!-- 4. COMMAND PALETTE MODAL -->
+        <div class="command-palette-modal" id="commandPalette">
+            <div class="cp-input-box">
+                <input type="text" class="cp-input" id="cpInput" placeholder="> Type a command to run..." />
+            </div>
+            <div class="cp-list" id="cpList">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+
+        <!-- 5. TOAST NOTIFICATION -->
+        <div class="vscode-toast" id="vscodeToast">
+            <svg viewBox="0 0 16 16">
+                <path
+                    d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z" />
+            </svg>
+            <span id="toastMessage">Action completed</span>
+        </div>
+
+    </div>
+
+    <!-- DATA & APPLICATION LOGIC -->
+    <script>
+        // ==========================================
+        // 1. DATA: ALL 8 PRACTICALS (PRESERVED 100%)
+        // ==========================================
+
+        const practicals = [
+            {
+                id: "p1",
+                title: "01_vacuum_cleaner.py",
+                name: "Simple Reflex Agent — Vacuum Cleaner",
+                topic: "Agent systems",
+                short: "Uses condition-action rules to clean two rooms.",
+                algorithm: `Step 1: Start and initialize the two-room environment (Room A and Room B).
+Step 2: Take user input for initial vacuum location (A or B) and statuses of Room A and Room B ('Clean' or 'Dirty').
+Step 3: While Room A is 'Dirty' or Room B is 'Dirty':
+        a. If vacuum is currently in Room A:
+           - If Room A is Dirty, execute 'Suck' action and mark Room A as Clean.
+           - Else, execute 'Move Right' action to go to Room B.
+        b. If vacuum is currently in Room B:
+           - If Room B is Dirty, execute 'Suck' action and mark Room B as Clean.
+           - Else, execute 'Move Left' action to go to Room A.
+Step 4: Once both rooms are clean, print "Both rooms are clean."
+Step 5: Terminate the agent process.`,
+                explanation: `A simple reflex agent chooses an action using only what it senses right now. It does not remember earlier states.
+
+Rules:
+• If the current room is Dirty, perform Suck.
+• If room A is Clean, move Right.
+• If room B is Clean, move Left.
+
+The loop ends when both rooms are clean. The agent reacts to the current room and its status.`,
+                concept: "Condition → Action. The agent reacts to the current room and its status.",
+                examTip: "Be ready to explain the reflex rule structure, sensory inputs (location, status), and termination condition.",
+                code: `# Simple Reflex Agent - Vacuum Cleaner World
+
+location = input("Enter vacuum location (A/B): ").upper()
+roomA = input("Room A status (Clean/Dirty): ").capitalize()
+roomB = input("Room B status (Clean/Dirty): ").capitalize()
+
+while roomA != "Clean" or roomB != "Clean":
+    if location == "A":
+        if roomA == "Dirty":
+            print("Suck Room A")
+            roomA = "Clean"
+        else:
+            print("Move Right")
+            location = "B"
+    else:
+        if roomB == "Dirty":
+            print("Suck Room B")
+            roomB = "Clean"
+        else:
+            print("Move Left")
+            location = "A"
+
+print("Both rooms are clean.")`
+            },
+            {
+                id: "p2",
+                title: "02_astar_8_puzzle.py",
+                name: "A* Search — 8 Puzzle",
+                topic: "Informed search",
+                short: "Uses path cost plus heuristic to guide search.",
+                algorithm: `Step 1: Define the target GOAL state (1, 2, 3, 4, 5, 6, 7, 8, 0).
+Step 2: Define the heuristic function h(s) using Manhattan Distance (sum of horizontal and vertical distances of non-blank tiles from goal positions).
+Step 3: Define neighbors(s) to generate all valid states by sliding adjacent tiles into the blank position (0).
+Step 4: Initialize a Priority Queue (min-heap) with tuple: (f=h(start), g=0, state=start).
+Step 5: Initialize a cost dictionary with cost[start] = 0 and parent dictionary parent[start] = None.
+Step 6: While the priority queue is not empty:
+        a. Pop the state with the lowest f cost: (f, g, current).
+        b. If current == GOAL:
+           - Reconstruct solution path by backtracking through parent pointers.
+           - Print each state step and total moves, then return.
+        c. If g != cost[current], continue (skip stale entries).
+        d. For each neighbour state in neighbors(current):
+           i. Calculate tentative cost new_g = g + 1.
+           ii. If new_g < cost[neighbour] (or neighbour not visited):
+               - Update cost[neighbour] = new_g.
+               - Set parent[neighbour] = current.
+               - Push (new_g + h(neighbour), new_g, neighbour) into the priority queue.
+Step 7: If priority queue is exhausted without finding GOAL, output "No solution found".`,
+                explanation: `A* selects states using f(n) = g(n) + h(n).
+
+• g(n): number of moves taken so far.
+• h(n): estimated moves remaining. This program uses Manhattan distance.
+• f(n): estimated total cost through that state.
+
+Enter the puzzle as three rows and use 0 for the blank tile. Goal:
+1 2 3
+4 5 6
+7 8 0
+
+This version finds a path and prints the number of moves.`,
+                concept: "f(n) = g(n) + h(n). Manhattan distance adds each tile's row and column distance from its goal.",
+                examTip: "Explain why Manhattan distance is admissible (never overestimates) and how PriorityQueue (heapq) maintains optimality.",
+                code: `import heapq
+
+GOAL = (1, 2, 3, 4, 5, 6, 7, 8, 0)
+
+def heuristic(s):
+    h = 0
+    for i, x in enumerate(s):
+        if x != 0:
+            j = x - 1
+            h += abs(i // 3 - j // 3) + abs(i % 3 - j % 3)
+    return h
+
+def neighbors(s):
+    z = s.index(0)
+    r, c = divmod(z, 3)
+    result = []
+
+    for dr, dc in [(-1,0), (1,0), (0,-1), (0,1)]:
+        nr, nc = r + dr, c + dc
+        if 0 <= nr < 3 and 0 <= nc < 3:
+            p = nr * 3 + nc
+            a = list(s)
+            a[z], a[p] = a[p], a[z]
+            result.append(tuple(a))
+    return result
+
+def astar(start):
+    pq = [(heuristic(start), 0, start)]
+    parent = {start: None}
+    cost = {start: 0}
+
+    while pq:
+        f, g, current = heapq.heappop(pq)
+        if current == GOAL:
+            path = []
+            while current is not None:
+                path.append(current)
+                current = parent[current]
+            return path[::-1]
+
+        if g != cost[current]:
+            continue
+
+        for nxt in neighbors(current):
+            new_g = g + 1
+            if new_g < cost.get(nxt, float("inf")):
+                cost[nxt] = new_g
+                parent[nxt] = current
+                heapq.heappush(pq, (new_g + heuristic(nxt), new_g, nxt))
+    return None
+
+print("Enter puzzle (0 = blank), 3 rows:")
+a = []
+for i in range(3):
+    a += list(map(int, input().split()))
+
+if sorted(a) != list(range(9)):
+    print("Invalid puzzle")
+else:
+    path = astar(tuple(a))
+    if path:
+        for step, state in enumerate(path):
+            print("Step", step, state[:3], state[3:6], state[6:])
+        print("Total moves:", len(path) - 1)
+    else:
+        print("No solution found")`
+            },
+{
+    id: "p3",
+    title: "03_tower_of_hanoi.py",
+    name: "Tower of Hanoi",
+    topic: "Recursion",
+    short: "Solves Tower of Hanoi using recursion.",
+    algorithm: `Step 1: Read number of disks n.
+Step 2: Define hanoi(n, source, target, auxiliary).
+Step 3: If n == 0, return.
+Step 4: Move n-1 disks to auxiliary rod.
+Step 5: Move the largest disk to target rod.
+Step 6: Move n-1 disks from auxiliary to target.
+Step 7: Call hanoi(n, "A", "C", "B").
+Step 8: Minimum moves = 2ⁿ - 1.`,
+    explanation: `Tower of Hanoi transfers disks from source to target using an auxiliary rod.
+
+1. Move n-1 disks to auxiliary.
+2. Move largest disk to target.
+3. Move remaining disks to target.
+
+A larger disk cannot be placed on a smaller disk.`,
+    concept: "Recursion: Solving a problem by breaking it into smaller problems.",
+    examTip: "Time Complexity: O(2ⁿ). Base Case: n == 0.",
+                code: `from collections import deque
+
+def solve_hanoi(n):
+    start = (tuple(range(n, 0, -1)), (), ())
+    goal = ((), (), tuple(range(n, 0, -1)))
+
+    q = deque([(start, [])])
+    visited = {start}
+
+    while q:
+        state, path = q.popleft()
+
+        if state == goal:
+            return path
+
+        for i in range(3):
+            for j in range(3):
+                if i == j or not state[i]:
+                    continue
+
+                disk = state[i][-1]
+
+                if state[j] and state[j][-1] < disk:
+                    continue
+
+                new = [list(p) for p in state]
+                new[i].pop()
+                new[j].append(disk)
+                new = tuple(tuple(p) for p in new)
+
+                if new not in visited:
+                    visited.add(new)
+                    q.append((new, path + [(i, j)]))
+
+    return None
+
+
+n = 3
+moves = solve_hanoi(n)
+
+for step, (src, dst) in enumerate(moves, 1):
+    print(f"Step {step}: {chr(65+src)} -> {chr(65+dst)}")
+
+print("Minimum moves:", len(moves))`
+            },
+            {
+                id: "p4",
+                title: "04_local_beam_tsp.py",
+                name: "Local Beam Search — TSP",
+                topic: "Local search",
+                short: "Keeps the K lowest-cost routes at each iteration.",
+                algorithm: `Step 1: Input the number of cities n, distance matrix dist, and beam width K.
+Step 2: Generate an initial set of K distinct candidate routes:
+        Swap the second city with each city i (for i from 1 to n) to form diverse routes, capped at size K.
+Step 3: Enter the beam search loop:
+        a. Initialize candidates list starting with the current states.
+        b. For each route in current states:
+           - Generate all neighbouring routes by swapping two city positions (2-opt neighborhood).
+           - Add generated neighbours to candidates list.
+        c. Filter duplicate routes from candidates using a set.
+        d. Sort all unique candidates in ascending order by total tour cost (distance including return to start).
+        e. Select the top K lowest-cost routes to form new_states.
+        f. Check stopping condition:
+           - If cost(new_states[0]) >= cost(states[0]) (no improvement found):
+             Return states[0] as the best route found.
+        g. Otherwise, update states = new_states and repeat.
+Step 4: Format and print the best tour sequence (e.g., A -> B -> C -> A) and its total distance.`,
+                explanation: `The Travelling Salesman Problem asks for a low-distance tour that visits each city and returns to the start.
+
+Local Beam Search:
+1. Start with K candidate routes.
+2. Generate neighbours by swapping city positions.
+3. Calculate total distance, including the return to the first city.
+4. Keep the K lowest-cost routes.
+5. Stop when the best cost does not improve.
+
+This heuristic does not guarantee the globally shortest tour.`,
+                concept: "Beam width K controls how many candidate routes are kept at a time.",
+                examTip: "Contrast beam search with standard hill climbing (K=1) and genetic algorithms.",
+                code: `def cost(route, dist):
+    total = 0
+    for i in range(len(route) - 1):
+        total += dist[route[i]][route[i + 1]]
+    return total + dist[route[-1]][route[0]]
+
+def neighbors(route):
+    result = []
+    for i in range(1, len(route)):
+        for j in range(i + 1, len(route)):
+            r = route[:]
+            r[i], r[j] = r[j], r[i]
+            result.append(r)
+    return result
+
+def beam_search(dist, n, k):
+    states = []
+    for i in range(1, n):
+        route = list(range(n))
+        route[1], route[i] = route[i], route[1]
+        states.append(route)
+    states = states[:k]
+
+    while True:
+        candidates = states[:]
+        for route in states:
+            candidates += neighbors(route)
+
+        unique = []
+        seen = set()
+        for route in candidates:
+            key = tuple(route)
+            if key not in seen:
+                seen.add(key)
+                unique.append(route)
+
+        unique.sort(key=lambda r: cost(r, dist))
+        new_states = unique[:k]
+
+        if cost(new_states[0], dist) >= cost(states[0], dist):
+            return states[0]
+        states = new_states
+
+n = int(input("Number of cities: "))
+print("Enter distance matrix:")
+dist = [list(map(int, input().split())) for _ in range(n)]
+k = int(input("Beam width K: "))
+
+route = beam_search(dist, n, k)
+names = [chr(65 + city) for city in route]
+print("Best route:", " -> ".join(names + [names[0]]))
+print("Distance:", cost(route, dist))`
+            },
+            {
+                id: "p5",
+                title: "05_bfs_8_puzzle.py",
+                name: "Breadth-First Search — 8 Puzzle",
+                topic: "Uninformed search",
+                short: "Explores states level by level using a FIFO queue.",
+                algorithm: `Step 1: Define the target GOAL state: (1, 2, 3, 4, 5, 6, 7, 8, 0).
+Step 2: Read start state (3 rows, 9 numbers total) from user; check validity (must contain digits 0 to 8).
+Step 3: Initialize a FIFO queue (deque) containing [start].
+Step 4: Initialize a parent dictionary with parent[start] = None (also acts as visited set).
+Step 5: While queue is not empty:
+        a. Dequeue current state from front: current = queue.popleft().
+        b. If current == GOAL:
+           - Backtrack parent pointers from current to start to build solution path.
+           - Return reversed path.
+        c. Generate all valid neighbours by moving the blank tile (0) Up, Down, Left, or Right.
+        d. For each neighbour state:
+           - If neighbour not in parent (unvisited):
+             * Record parent[neighbour] = current.
+             * Append neighbour to back of queue.
+Step 6: If path is found, print each step state and total move count. Otherwise, print "No solution found".`,
+                explanation: `BFS explores all states at one depth before exploring deeper states.
+
+• Queue: stores states waiting to be explored.
+• Visited set: prevents revisiting the same state.
+• Neighbours: states made by swapping the blank (0) with an adjacent tile.
+
+When every move has equal cost, BFS finds a solution with the fewest moves.`,
+                concept: "FIFO = First In, First Out. The first state added to the queue is explored first.",
+                examTip: "BFS is complete and optimal for unweighted step costs, but suffers from high memory consumption O(bᵈ).",
+                code: `from collections import deque
+
+GOAL = (1, 2, 3, 4, 5, 6, 7, 8, 0)
+
+def neighbors(state):
+    result = []
+    z = state.index(0)
+    r, c = divmod(z, 3)
+
+    for dr, dc in [(-1,0), (1,0), (0,-1), (0,1)]:
+        nr, nc = r + dr, c + dc
+        if 0 <= nr < 3 and 0 <= nc < 3:
+            p = nr * 3 + nc
+            a = list(state)
+            a[z], a[p] = a[p], a[z]
+            result.append(tuple(a))
+    return result
+
+def bfs(start, goal):
+    queue = deque([start])
+    parent = {start: None}
+
+    while queue:
+        current = queue.popleft()
+        if current == goal:
+            path = []
+            while current is not None:
+                path.append(current)
+                current = parent[current]
+            return path[::-1]
+
+        for nxt in neighbors(current):
+            if nxt not in parent:
+                parent[nxt] = current
+                queue.append(nxt)
+    return None
+
+print("Enter puzzle (0 = blank), 3 rows:")
+a = []
+for i in range(3):
+    a += list(map(int, input().split()))
+
+if sorted(a) != list(range(9)):
+    print("Invalid puzzle")
+else:
+    path = bfs(tuple(a), GOAL)
+    if path:
+        for step, state in enumerate(path):
+            print("Step", step, state[:3], state[3:6], state[6:])
+        print("Total moves:", len(path) - 1)
+    else:
+        print("No solution found")`
+            },
+            {
+                id: "p6",
+                title: "06_water_jug_bfs.py",
+                name: "Water Jug Problem — BFS",
+                topic: "State-space search",
+                short: "Finds jug operations that reach a target amount.",
+                algorithm: `Step 1: Input jug capacities x, y and target amount target.
+Step 2: Check mathematical solvability:
+        - If target == 0, output start state (0, 0) and exit.
+        - If target > max(x, y) or target % gcd(x, y) != 0, output "No solution" and exit (Bézout's identity).
+Step 3: Initialize BFS queue with start state (0, 0) and parent map parent[(0, 0)] = None.
+Step 4: While queue is not empty:
+        a. Dequeue front state (a, b).
+        b. If a == target or b == target:
+           - Backtrack parent pointers to reconstruct sequence of states.
+           - Print each step (Step i: (amount_x, amount_y)) and return.
+        c. Generate 6 possible next valid operations:
+           1. Fill Jug X: (x, b)
+           2. Fill Jug Y: (a, y)
+           3. Empty Jug X: (0, b)
+           4. Empty Jug Y: (a, 0)
+           5. Pour X -> Y: (a - p, b + p), where p = min(a, y - b)
+           6. Pour Y -> X: (a + q, b - q), where q = min(b, x - a)
+        d. For each generated state in moves:
+           - If state not in parent (unvisited):
+             * Set parent[state] = (a, b).
+             * Append state to queue.
+Step 5: If queue is exhausted without meeting target, print "No solution".`,
+                explanation: `A state (a, b) records the current water in jug X and jug Y.
+
+Possible actions: fill either jug, empty either jug, pour X into Y, or pour Y into X.
+
+BFS explores states without repeating them. A target is possible only if it does not exceed the larger jug and is divisible by gcd(X, Y), with target 0 also valid.`,
+                concept: "State = (amount in X, amount in Y). BFS searches from (0, 0).",
+                examTip: "Bézout's identity condition: target % gcd(x, y) == 0 and target <= max(x, y).",
+                code: `from collections import deque
+from math import gcd
+
+def water_jug(x, y, target):
+    if target == 0:
+        print("Start:", (0, 0))
+        print("Target reached")
+        return
+
+    if target > max(x, y) or target % gcd(x, y) != 0:
+        print("No solution")
+        return
+
+    queue = deque([(0, 0)])
+    parent = {(0, 0): None}
+
+    while queue:
+        a, b = queue.popleft()
+
+        if a == target or b == target:
+            path = []
+            state = (a, b)
+            while state is not None:
+                path.append(state)
+                state = parent[state]
+            for step, state in enumerate(path[::-1]):
+                print("Step", step, state)
+            return
+
+        p = min(a, y - b)
+        q = min(b, x - a)
+        moves = [
+            (x, b), (a, y), (0, b), (a, 0),
+            (a - p, b + p), (a + q, b - q)
+        ]
+
+        for state in moves:
+            if state not in parent:
+                parent[state] = (a, b)
+                queue.append(state)
+
+    print("No solution")
+
+x = int(input("Jug X capacity: "))
+y = int(input("Jug Y capacity: "))
+target = int(input("Target amount: "))
+
+if x > 0 and y > 0 and target >= 0:
+    water_jug(x, y, target)
+else:
+    print("Invalid input")`
+            },
+            {
+                id: "p7",
+                title: "07_eight_queens.py",
+                name: "8 Queens — Backtracking",
+                topic: "Constraint satisfaction",
+                short: "Places eight queens without row, column, or diagonal attacks.",
+                algorithm: `Step 1: Initialize board array of size N = 8 with all -1 (board[row] stores column where queen is placed in that row).
+Step 2: Define safety checking function safe(row, col):
+        Iterate through all previously placed queens in rows i from 0 to row - 1:
+        - If board[i] == col: Conflict in same column -> return False.
+        - If abs(board[i] - col) == abs(i - row): Conflict along diagonal -> return False.
+        - If no conflicts detected, return True.
+Step 3: Define recursive backtracking solver solve(row):
+        a. If row == N (all 8 queens successfully positioned), return True.
+        b. For each column col from 0 to N - 1:
+           i. If safe(row, col) is True:
+              - Place queen: board[row] = col.
+              - If solve(row + 1) == True: return True (solution found!).
+              - Backtrack: reset board[row] = -1 (remove queen and test next column).
+        c. If no column works in current row, return False.
+Step 4: Execute solve(0). If True, render 8x8 matrix printing 'Q' for queen positions and '.' for empty squares. Otherwise, print "No solution".`,
+                explanation: `The goal is to place eight queens on an 8×8 board so no two queens attack each other.
+
+1. Try a column in the current row.
+2. Check whether it conflicts with earlier queens.
+3. If safe, continue to the next row.
+4. If no column works, remove the previous queen and try another position.
+
+The board list stores the column chosen for each row.`,
+                concept: "Backtracking = make a choice, explore it, and undo it if it fails.",
+                examTip: "Diagonal conflict condition: abs(board[i] - col) == abs(i - row).",
+                code: `N = 8
+board = [-1] * N
+
+def safe(row, col):
+    for i in range(row):
+        if board[i] == col:
+            return False
+        if abs(board[i] - col) == abs(i - row):
+            return False
+    return True
+
+def solve(row):
+    if row == N:
+        return True
+
+    for col in range(N):
+        if safe(row, col):
+            board[row] = col
+
+            if solve(row + 1):
+                return True
+
+            board[row] = -1
+
+    return False
+
+if solve(0):
+    for row in range(N):
+        for col in range(N):
+            if board[row] == col:
+                print("Q", end=" ")
+            else:
+                print(".", end=" ")
+        print()
+else:
+    print("No solution")`
+            },
+            {
+                id: "p8",
+                title: "08_rule_based_chatbot.py",
+                name: "Rule-Based AI Chatbot",
+                topic: "Knowledge-based systems",
+                short: "Matches user text against predefined rules and replies.",
+                algorithm: `Step 1: Initialize knowledge base dictionary rules mapping keyword triggers to predefined responses:
+        { "hello": "Hello! How can I help you?", "name": "I am a simple AI chatbot.", ... }
+Step 2: Enter an infinite conversational while loop:
+        a. Prompt and take user text input: user = input("You: ").
+        b. Normalize input: convert text to lowercase and strip whitespace.
+        c. Check termination words:
+           - If user text matches "bye", "exit", or "quit":
+             Print "Bot: Goodbye!" and break the loop.
+        d. Initialize boolean flag found = False.
+        e. Iterate through each (word, reply) in rules:
+           - If keyword word exists as a substring in user:
+             * Print "Bot: " + reply.
+             * Set found = True.
+             * Break out of rule iteration.
+        f. If found is False (no keyword matched):
+           - Print default fallback: "Bot: Sorry, I do not understand."
+Step 3: End chatbot execution.`,
+                explanation: `This chatbot uses fixed keyword rules; it does not learn from conversations.
+
+1. Convert the user's message to lowercase.
+2. Check for greeting, name, course, help, thanks, or exit words.
+3. Return the matching response.
+4. If nothing matches, display a fallback response.
+5. Stop when the user types bye, exit, or quit.
+
+It is a rule-based system rather than a generative AI model.`,
+                concept: "IF input matches a rule THEN return its response; otherwise use a default reply.",
+                examTip: "Contrast pattern matching rules with statistical NLP and transformer-based LLMs.",
+                code: `rules = {
+    "hello": "Hello! How can I help you?",
+    "hi": "Hello! How can I help you?",
+    "name": "I am a simple AI chatbot.",
+    "how are you": "I am fine. Thank you!",
+    "course": "Ask me about your course.",
+    "help": "You can ask about my name or course.",
+    "thanks": "You are welcome!"
+}
+
+while True:
+    user = input("You: ").lower().strip()
+
+    if user in ["bye", "exit", "quit"]:
+        print("Bot: Goodbye!")
+        break
+
+    found = False
+    for word, reply in rules.items():
+        if word in user:
+            print("Bot:", reply)
+            found = True
+            break
+
+    if not found:
+        print("Bot: Sorry, I do not understand.")`
+            }
+        ];
+
+        // ==========================================
+        // 2. STATE MANAGEMENT
+        // ==========================================
+        let isUnlocked = false; // Initially locked: No Folder Opened + Welcome Tab
+        let activeTabType = "welcome"; // "welcome" | "practical" | "guide"
+        let activeKey = -1; // 0..7 for practicals
+        let openTabs = [
+            { type: "welcome", key: "welcome", title: "Welcome" }
+        ];
+        let notesPanelOpen = false;
+        let commandHistory = [];
+        let historyIndex = -1;
+
+        // ==========================================
+        // 3. FULL SCREEN BROWSER MAXIMIZE
+        // ==========================================
+
+        function toggleFullScreen() {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
+                const el = document.documentElement;
+                if (el.requestFullscreen) {
+                    el.requestFullscreen();
+                } else if (el.webkitRequestFullscreen) {
+                    el.webkitRequestFullscreen();
+                } else if (el.msRequestFullscreen) {
+                    el.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        }
+
+        function updateMaximizeButton() {
+            const btn = document.getElementById("winMaximizeBtn");
+            const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+            if (isFs) {
+                btn.innerHTML = "&#10065;"; // ❐ restore
+                btn.title = "Restore (Exit Full Screen)";
+            } else {
+                btn.innerHTML = "&#9633;"; // □ maximize
+                btn.title = "Maximize (Full Screen)";
+            }
+        }
+
+        document.addEventListener("fullscreenchange", updateMaximizeButton);
+        document.addEventListener("webkitfullscreenchange", updateMaximizeButton);
+        document.addEventListener("mozfullscreenchange", updateMaximizeButton);
+        document.addEventListener("MSFullscreenChange", updateMaximizeButton);
+
+        // ==========================================
+        // 4. SYNTAX HIGHLIGHTING ENGINE (DARK+)
+        // ==========================================
+
+        function escHtml(s) {
+            return s.replace(/[&<>"']/g, c => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            }[c]));
+        }
+
+        function highlightPython(code) {
+            const lines = code.split("\n");
+            const kw = new Set([
+                "def", "class", "import", "from", "as", "return", "if", "elif", "else",
+                "while", "for", "in", "try", "except", "finally", "with", "pass", "break",
+                "continue", "yield", "lambda", "raise", "global", "assert", "async", "await", "not", "and", "or", "is"
+            ]);
+            const builtins = new Set([
+                "print", "input", "len", "range", "list", "dict", "set", "tuple", "int",
+                "str", "float", "bool", "abs", "min", "max", "sum", "sorted", "enumerate",
+                "zip", "map", "filter", "open", "type", "isinstance", "super", "divmod", "gcd"
+            ]);
+            const consts = new Set(["True", "False", "None"]);
+
+            let inMultiStr = false;
+            let multiStrDelim = "";
+
+            return lines.map((line) => {
+                let out = "";
+                let i = 0;
+                const len = line.length;
+
+                while (i < len) {
+                    if (inMultiStr) {
+                        const endIdx = line.indexOf(multiStrDelim, i);
+                        if (endIdx !== -1) {
+                            out += `<span class="hl-str">${escHtml(line.slice(i, endIdx + 3))}</span>`;
+                            i = endIdx + 3;
+                            inMultiStr = false;
+                        } else {
+                            out += `<span class="hl-str">${escHtml(line.slice(i))}</span>`;
+                            i = len;
+                        }
+                        continue;
+                    }
+
+                    if (line[i] === '#') {
+                        out += `<span class="hl-comment">${escHtml(line.slice(i))}</span>`;
+                        break;
+                    }
+
+                    if (line.slice(i, i + 3) === '"""' || line.slice(i, i + 3) === "''" + "'") {
+                        multiStrDelim = line.slice(i, i + 3);
+                        const endIdx = line.indexOf(multiStrDelim, i + 3);
+                        if (endIdx !== -1) {
+                            out += `<span class="hl-str">${escHtml(line.slice(i, endIdx + 3))}</span>`;
+                            i = endIdx + 3;
+                        } else {
+                            out += `<span class="hl-str">${escHtml(line.slice(i))}</span>`;
+                            inMultiStr = true;
+                            i = len;
+                        }
+                        continue;
+                    }
+
+                    if (line[i] === '"' || line[i] === "'") {
+                        const quote = line[i];
+                        let j = i + 1;
+                        while (j < len && (line[j] !== quote || line[j - 1] === '\\')) j++;
+                        if (j < len) j++;
+                        out += `<span class="hl-str">${escHtml(line.slice(i, j))}</span>`;
+                        i = j;
+                        continue;
+                    }
+
+                    if (line[i] === '@' && /[a-zA-Z_]/.test(line[i + 1] || '')) {
+                        let j = i + 1;
+                        while (j < len && /[a-zA-Z0-9_\.]/.test(line[j])) j++;
+                        out += `<span class="hl-dec">${escHtml(line.slice(i, j))}</span>`;
+                        i = j;
+                        continue;
+                    }
+
+                    if (/\d/.test(line[i]) && (i === 0 || /[^a-zA-Z0-9_]/.test(line[i - 1]))) {
+                        let j = i;
+                        while (j < len && /[\d\.eExXa-fA-F]/.test(line[j])) j++;
+                        out += `<span class="hl-num">${escHtml(line.slice(i, j))}</span>`;
+                        i = j;
+                        continue;
+                    }
+
+                    if (/[a-zA-Z_]/.test(line[i])) {
+                        let j = i;
+                        while (j < len && /[a-zA-Z0-9_]/.test(line[j])) j++;
+                        const word = line.slice(i, j);
+
+                        if (kw.has(word)) {
+                            out += `<span class="hl-kw">${escHtml(word)}</span>`;
+                        } else if (consts.has(word)) {
+                            out += `<span class="hl-const">${escHtml(word)}</span>`;
+                        } else if (builtins.has(word)) {
+                            out += `<span class="hl-builtin">${escHtml(word)}</span>`;
+                        } else if (word === "self" || word === "cls") {
+                            out += `<span class="hl-var">${escHtml(word)}</span>`;
+                        } else if (j < len && line[j] === '(') {
+                            out += `<span class="hl-fn">${escHtml(word)}</span>`;
+                        } else {
+                            out += escHtml(word);
+                        }
+                        i = j;
+                        continue;
+                    }
+
+                    out += escHtml(line[i]);
+                    i++;
+                }
+
+                return out || ' ';
+            });
+        }
+
+        function renderCodeInEditor(code, lang = "py") {
+            const codeTable = document.getElementById("codeTable");
+            const minimapContent = document.getElementById("minimapContent");
+            codeTable.innerHTML = "";
+
+            const highlightedLines = lang === "py" ? highlightPython(code) : code.split("\n").map(l => escHtml(l) || ' ');
+            let tableHtml = "";
+            let miniHtml = "";
+
+            highlightedLines.forEach((hLine, idx) => {
+                const ln = idx + 1;
+                tableHtml += `
+      <div class="code-row ${ln === 1 ? 'active-line' : ''}" data-line="${ln}">
+        <div class="line-num">${ln}</div>
+        <div class="code-text">${hLine}</div>
+      </div>
+    `;
+                miniHtml += (hLine.replace(/<[^>]*>/g, '') || ' ') + "\n";
+            });
+
+            codeTable.innerHTML = tableHtml;
+            minimapContent.textContent = miniHtml;
+            document.getElementById("codeScroll").scrollTop = 0;
+        }
+
+        // ==========================================
+        // 5. WORKSPACE RENDERING
+        // ==========================================
+
+        function getFileIconSvg(type) {
+            if (type === "py") {
+                return `<svg viewBox="0 0 16 16"><path fill="#3776ab" d="M7.9 1c-3.6 0-3.4 1.5-3.4 1.5l.04 1.6h3.4v.5H3.1s-2.1-.2-2.1 3.2 1.8 3.3 1.8 3.3h1.1v-1.6s-.1-1.8 1.8-1.8h3.1s1.7.1 1.7-1.7V3.2S10.8 1 7.9 1zm-1.8 1a.6.6 0 1 1 0 1.2.6.6 0 0 1 0-1.2z"/><path fill="#ffd343" d="M8.1 15c3.6 0 3.4-1.5 3.4-1.5l-.04-1.6H8.06v-.5h4.84s2.1.2 2.1-3.2-1.8-3.3-1.8-3.3h-1.1v1.6s.1 1.8-1.8 1.8H7.16s-1.7-.1-1.7 1.7v2.2s-.3 2.3 2.64 2.3zm1.8-1a.6.6 0 1 1 0-1.2.6.6 0 0 1 0 1.2z"/></svg>`;
+            } else if (type === "md") {
+                return `<svg viewBox="0 0 16 16" fill="#519aba"><path d="M14 3H2a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1zm-8 7H4.5V6.8l-1.3 1.3-.7-.7L4.5 5.4 6.5 7.4l-.7.7-1.3-1.3V10zm5.5 0h-1.5V7.5L8.5 9l-1-1 2.5-2.5h1.5V10z"/></svg>`;
+            } else {
+                return `<svg viewBox="0 0 16 16" fill="#007acc"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 2.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9z"/></svg>`;
+            }
+        }
+
+        function renderUI() {
+            const noFolderSidebar = document.getElementById("noFolderSidebar");
+            const unlockedSidebar = document.getElementById("unlockedSidebar");
+            const searchBarText = document.getElementById("searchBarText");
+            const pageTitle = document.getElementById("pageTitle");
+            const statusBranch = document.getElementById("statusBranch");
+            const statusLnCol = document.getElementById("statusLnCol");
+            const btnRun = document.getElementById("btnRunCode");
+            const btnCopy = document.getElementById("btnCopyCode");
+            const btnNotes = document.getElementById("btnToggleNotes");
+            const breadcrumbs = document.getElementById("breadcrumbs");
+            const welcomePage = document.getElementById("welcomePage");
+            const editorPane = document.getElementById("editorPane");
+
+            if (!isUnlocked) {
+                // Initial state: NO FOLDER OPENED
+                noFolderSidebar.style.display = "flex";
+                unlockedSidebar.style.display = "none";
+                searchBarText.textContent = "Visual Studio Code";
+                statusBranch.style.display = "none";
+                statusLnCol.style.display = "none";
+                btnRun.style.display = "none";
+                btnCopy.style.display = "none";
+                btnNotes.style.display = "none";
+                breadcrumbs.style.display = "none";
+
+                welcomePage.style.display = "flex";
+                editorPane.classList.remove("open");
+                document.getElementById("notesPane").classList.remove("open");
+                pageTitle.textContent = "Visual Studio Code";
+                document.getElementById("statusLang").textContent = "Ready";
+            } else {
+                // Unlocked state: AI_LAB_PRACTICALS folder
+                noFolderSidebar.style.display = "none";
+                unlockedSidebar.style.display = "flex";
+                searchBarText.textContent = "AI_LAB_PRACTICALS";
+                statusBranch.style.display = "flex";
+
+                renderFileTreeNodes();
+
+                if (activeTabType === "welcome") {
+                    welcomePage.style.display = "flex";
+                    editorPane.classList.remove("open");
+                    btnRun.style.display = "none";
+                    btnCopy.style.display = "none";
+                    btnNotes.style.display = "none";
+                    breadcrumbs.style.display = "none";
+                    statusLnCol.style.display = "none";
+                    pageTitle.textContent = "Welcome - Visual Studio Code";
+                    document.getElementById("statusLang").textContent = "Ready";
+                } else if (activeTabType === "practical") {
+                    welcomePage.style.display = "none";
+                    editorPane.classList.add("open");
+                    btnRun.style.display = "flex";
+                    btnCopy.style.display = "flex";
+                    btnNotes.style.display = "flex";
+                    breadcrumbs.style.display = "flex";
+                    statusLnCol.style.display = "flex";
+
+                    const p = practicals[activeKey];
+                    pageTitle.textContent = `${p.title} - AI_LAB_PRACTICALS - Visual Studio Code`;
+                    document.getElementById("statusLang").textContent = `{ } Python 3.11.4 (P${activeKey + 1}/8)`;
+
+                    breadcrumbs.innerHTML = `
+        <span class="breadcrumb-item">AI_LAB_PRACTICALS</span>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-item">${escHtml(p.title)}</span>
+      `;
+
+                    const fullCode = `"""
+======================================================================
+PRACTICAL ${activeKey + 1 < 10 ? '0' + (activeKey + 1) : activeKey + 1}: ${p.name.toUpperCase()}
+TOPIC: ${p.topic.toUpperCase()}
+----------------------------------------------------------------------
+ALGORITHM:
+${p.algorithm}
+
+EXPLANATION:
+${p.explanation}
+
+CORE IDEA:
+${p.concept}
+
+EXAM REVISION TIP:
+${p.examTip}
+======================================================================
+"""
+
+${p.code}`;
+
+                    renderCodeInEditor(fullCode, "py");
+                    renderNotesContent(p);
+
+                } else if (activeTabType === "guide") {
+                    welcomePage.style.display = "none";
+                    editorPane.classList.add("open");
+                    btnRun.style.display = "none";
+                    btnCopy.style.display = "flex";
+                    btnNotes.style.display = "none";
+                    breadcrumbs.style.display = "flex";
+                    statusLnCol.style.display = "flex";
+
+                    pageTitle.textContent = "PRACTICALS_GUIDE.md - AI_LAB_PRACTICALS - Visual Studio Code";
+                    document.getElementById("statusLang").textContent = "Markdown";
+
+                    breadcrumbs.innerHTML = `
+        <span class="breadcrumb-item">AI_LAB_PRACTICALS</span>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-item">PRACTICALS_GUIDE.md</span>
+      `;
+
+                    const guideMd = `# AI Lab Practicals — Comprehensive Study Guide
+
+All 8 university AI lab practicals bundled with runnable code, step-by-step algorithms, theory explanations, and exam revision summaries.
+
+## Index of Practicals & Algorithms
+${practicals.map((p, i) => `### ${i + 1}. **${p.title}** — ${p.name} (*${p.topic}*)
+
+\`\`\`
+${p.algorithm}
+\`\`\`
+`).join("\n")}
+
+---
+### Quick Commands:
+- Type \`python <filename>\` in the integrated terminal to simulate run.
+- Click **Copy Code** on the top right to copy the pure Python script.
+- Click **Notes** to read the simple step-by-step algorithm and viva points in split view.
+- Type \`lock\` or \`close\` in the terminal to revert to the initial No Folder Opened state.
+`;
+
+                    renderCodeInEditor(guideMd, "md");
+                }
+            }
+
+            renderTabs();
+        }
+
+        function renderFileTreeNodes() {
+            const container = document.getElementById("fileTreeContainer");
+            container.innerHTML = "";
+
+            practicals.forEach((p, idx) => {
+                const node = document.createElement("div");
+                node.className = `tree-node ${activeTabType === "practical" && activeKey === idx ? "active" : ""}`;
+                node.style.paddingLeft = "16px";
+                node.innerHTML = `
+      <span class="file-icon">${getFileIconSvg("py")}</span>
+      <span class="file-name">${escHtml(p.title)}</span>
+      <span class="file-badge">P${idx + 1}</span>
+    `;
+                node.title = `${p.name} (${p.topic})`;
+                node.onclick = () => openPracticalFile(idx);
+                container.appendChild(node);
+            });
+
+            const readmeNode = document.createElement("div");
+            readmeNode.className = `tree-node ${activeTabType === "guide" ? "active" : ""}`;
+            readmeNode.style.paddingLeft = "16px";
+            readmeNode.innerHTML = `
+    <span class="file-icon">${getFileIconSvg("md")}</span>
+    <span class="file-name">PRACTICALS_GUIDE.md</span>
+  `;
+            readmeNode.onclick = () => openGuideFile();
+            container.appendChild(readmeNode);
+        }
+
+        function renderTabs() {
+            const container = document.getElementById("tabsContainer");
+            container.innerHTML = "";
+
+            openTabs.forEach((tab, index) => {
+                const isActive = (tab.type === activeTabType && (tab.type !== "practical" || tab.key === activeKey));
+                const tabEl = document.createElement("div");
+                tabEl.className = `tab ${isActive ? 'active' : ''}`;
+
+                let iconType = "py";
+                if (tab.type === "welcome") iconType = "welcome";
+                else if (tab.type === "guide") iconType = "md";
+
+                tabEl.innerHTML = `
+      <span class="file-icon">${getFileIconSvg(iconType)}</span>
+      <span class="tab-title">${escHtml(tab.title)}</span>
+      <span class="tab-close" onclick="closeTab(event, ${index})">✕</span>
+    `;
+                tabEl.onclick = (e) => {
+                    if (e.target.classList.contains("tab-close")) return;
+                    if (tab.type === "welcome") openWelcomeTab();
+                    else if (tab.type === "practical") openPracticalFile(tab.key);
+                    else if (tab.type === "guide") openGuideFile();
+                };
+                container.appendChild(tabEl);
+            });
+        }
+
+        function closeTab(e, index) {
+            e.stopPropagation();
+            if (openTabs.length === 1) {
+                showToast("Cannot close the last open editor tab.");
+                return;
+            }
+            const wasActive = (openTabs[index].type === activeTabType && openTabs[index].key === activeKey);
+            openTabs.splice(index, 1);
+
+            if (wasActive) {
+                const nextTab = openTabs[Math.max(0, index - 1)];
+                if (nextTab.type === "welcome") openWelcomeTab();
+                else if (nextTab.type === "practical") openPracticalFile(nextTab.key);
+                else if (nextTab.type === "guide") openGuideFile();
+            } else {
+                renderTabs();
+            }
+        }
+
+        function openWelcomeTab() {
+            activeTabType = "welcome";
+            activeKey = -1;
+            if (!openTabs.some(t => t.type === "welcome")) {
+                openTabs.unshift({ type: "welcome", key: "welcome", title: "Welcome" });
+            }
+            renderUI();
+        }
+
+        function openPracticalFile(idx) {
+            activeTabType = "practical";
+            activeKey = idx;
+            const p = practicals[idx];
+
+            if (!openTabs.some(t => t.type === "practical" && t.key === idx)) {
+                openTabs.push({ type: "practical", key: idx, title: p.title });
+            }
+
+            renderUI();
+        }
+
+        function openGuideFile() {
+            activeTabType = "guide";
+            activeKey = "guide";
+
+            if (!openTabs.some(t => t.type === "guide")) {
+                openTabs.push({ type: "guide", key: "guide", title: "PRACTICALS_GUIDE.md" });
+            }
+
+            renderUI();
+        }
+
+        function renderNotesContent(p) {
+            const notesBody = document.getElementById("notesBody");
+            notesBody.innerHTML = `
+    <h2>${escHtml(p.name)}</h2>
+    <div style="font-size:11px; color:#858585; margin-bottom:12px;">FILE: ${escHtml(p.title)} · TOPIC: ${escHtml(p.topic.toUpperCase())}</div>
+    
+    <div class="notes-card">
+      <div style="font-weight:600; color:#4ec9b0; margin-bottom:4px;">Core Concept</div>
+      <div>${escHtml(p.concept)}</div>
+    </div>
+
+    <h3>Step-by-Step Algorithm</h3>
+    <div class="notes-card algorithm">${escHtml(p.algorithm)}</div>
+
+    <h3>Detailed Explanation</h3>
+    <div style="white-space: pre-line; line-height:1.7;">${escHtml(p.explanation)}</div>
+
+    <h3>Exam Revision & Viva Tips</h3>
+    <div class="notes-card tip">
+      <div style="font-weight:600; color:#c586c0; margin-bottom:4px;">Exam Tip</div>
+      <div>${escHtml(p.examTip)}</div>
+    </div>
+
+    <div style="margin-top:20px; display:flex; gap:8px;">
+      <button class="btn-vs-primary" onclick="copyActiveCode()" style="flex:1; margin-bottom:0;">
+        ▣ Copy Python Code
+      </button>
+      <button class="btn-vs-secondary" onclick="copyTheoryNotes()" style="flex:1; margin-bottom:0;">
+        ▣ Copy Algorithm & Theory
+      </button>
+    </div>
+  `;
+        }
+
+        function toggleNotesPanel() {
+            const pane = document.getElementById("notesPane");
+            pane.classList.toggle("open");
+            notesPanelOpen = pane.classList.contains("open");
+            if (notesPanelOpen && activeTabType === "practical") {
+                renderNotesContent(practicals[activeKey]);
+            }
+        }
+
+        // ==========================================
+        // 6. COPY ACTIONS & CLIPBOARD HELPERS
+        // ==========================================
+
+        async function copyToClipboard(text, successMsg) {
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(text);
+                } else {
+                    const ta = document.createElement("textarea");
+                    ta.value = text;
+                    ta.style.position = "fixed";
+                    ta.style.opacity = "0";
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand("copy");
+                    ta.remove();
+                }
+                showToast(successMsg);
+            } catch (err) {
+                showToast("Copy failed: please select and copy manually.");
+            }
+        }
+
+        function copyActiveCode() {
+            if (activeTabType === "practical") {
+                const p = practicals[activeKey];
+                copyToClipboard(p.code, `Copied ${p.title} script to clipboard!`);
+            } else {
+                showToast("No active code file open to copy.");
+            }
+        }
+
+        function copyTheoryNotes() {
+            if (activeTabType === "practical") {
+                const p = practicals[activeKey];
+                const notes = `${p.name} (${p.topic})\n\nALGORITHM:\n${p.algorithm}\n\nEXPLANATION:\n${p.explanation}\n\nCORE IDEA:\n${p.concept}\n\nEXAM TIP:\n${p.examTip}`;
+                copyToClipboard(notes, `Copied algorithm & theory notes for ${p.title}!`);
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById("vscodeToast");
+            const msgEl = document.getElementById("toastMessage");
+            msgEl.textContent = msg;
+            toast.classList.add("show");
+            clearTimeout(window.__toastTimer);
+            window.__toastTimer = setTimeout(() => {
+                toast.classList.remove("show");
+            }, 2200);
+        }
+
+        // ==========================================
+        // 7. UNLOCKING & RESET MECHANISMS
+        // ==========================================
+
+        function triggerOpenFolder() {
+            unlockWorkspace();
+        }
+
+        function unlockWorkspace() {
+            isUnlocked = true;
+            document.getElementById("termPromptPath").textContent = "PS C:\\Users\\abhij\\AI_Lab_Practicals>";
+
+            openTabs = [
+                { type: "welcome", key: "welcome", title: "Welcome" },
+                { type: "practical", key: 0, title: practicals[0].title }
+            ];
+
+            openPracticalFile(0);
+            showToast("Folder opened: AI_LAB_PRACTICALS");
+        }
+
+        function resetToInitialState() {
+            isUnlocked = false;
+            activeTabType = "welcome";
+            activeKey = -1;
+            openTabs = [
+                { type: "welcome", key: "welcome", title: "Welcome" }
+            ];
+            document.getElementById("termPromptPath").textContent = "PS C:\\Users\\abhij>";
+            renderUI();
+            showToast("Closed folder");
+        }
+
+        // ==========================================
+        // 8. INTERACTIVE INTEGRATED TERMINAL ENGINE
+        // ==========================================
+
+        const terminalInput = document.getElementById("terminalInput");
+        const termHistory = document.getElementById("termHistory");
+        const terminalScreen = document.getElementById("terminalScreen");
+
+        function appendTermLine(text, color = "#cccccc") {
+            const line = document.createElement("div");
+            line.className = "term-line";
+            line.style.color = color;
+            line.textContent = text;
+            termHistory.appendChild(line);
+            terminalScreen.scrollTop = terminalScreen.scrollHeight;
+        }
+
+        function focusTerminal() {
+            terminalInput.focus();
+        }
+
+        function clearTerminalScreen() {
+            termHistory.innerHTML = "";
+            appendTermLine("Windows PowerShell", "#858585");
+            appendTermLine("Copyright (C) Microsoft Corporation. All rights reserved.", "#858585");
+            appendTermLine("", "#858585");
+        }
+
+        function togglePanel() {
+            const panel = document.getElementById("panelContainer");
+            panel.style.display = panel.style.display === "none" ? "flex" : "none";
+        }
+
+        function togglePanelMaximize() {
+            document.getElementById("panelContainer").classList.toggle("maximized");
+        }
+
+        function toggleSidebar() {
+            const sb = document.getElementById("sidebar");
+            sb.style.display = sb.style.display === "none" ? "flex" : "none";
+        }
+
+        function switchPanelTab(tabName) {
+            document.querySelectorAll(".panel-tab").forEach(t => t.classList.remove("active"));
+            if (tabName === "terminal") {
+                document.getElementById("tabTerminal").classList.add("active");
+                focusTerminal();
+            } else {
+                showToast(`Switched to ${tabName.toUpperCase()} panel`);
+            }
+        }
+
+        function runCurrentScript() {
+            focusTerminal();
+            if (activeTabType === "practical") {
+                const p = practicals[activeKey];
+                executeTerminalCommand(`python ${p.title}`);
+            } else {
+                showToast("Open a practical file to run in terminal.");
+            }
+        }
+
+        function executeTerminalCommand(cmd) {
+            cmd = cmd.trim();
+            const promptText = document.getElementById("termPromptPath").textContent;
+            appendTermLine(`${promptText} ${cmd}`, "#ffffff");
+
+            if (!cmd) return;
+
+            commandHistory.push(cmd);
+            historyIndex = commandHistory.length;
+
+            const lower = cmd.toLowerCase();
+
+            // 1. Secret Unlock triggers!
+            if (
+                lower === "python lab.py" ||
+                lower === "python practicals.py" ||
+                lower === "python -m practicals" ||
+                lower === "practicals" ||
+                lower === "lab" ||
+                lower === "unlock" ||
+                lower === "ai" ||
+                lower === "run practicals" ||
+                lower === "open practicals" ||
+                lower === "code practicals" ||
+                lower === "code ." ||
+                lower === "open"
+            ) {
+                appendTermLine("[+] Authenticating environment...", "#858585");
+                appendTermLine("[+] Opening folder: C:\\Users\\abhij\\AI_Lab_Practicals...", "#3794ff");
+                setTimeout(() => {
+                    appendTermLine("[1/8] 01_vacuum_cleaner.py     (Agent systems)", "#89d185");
+                    appendTermLine("[2/8] 02_astar_8_puzzle.py     (Informed search)", "#89d185");
+                    appendTermLine("[3/8] 03_tower_of_hanoi.py     (Recursion)", "#89d185");
+                    appendTermLine("[4/8] 04_local_beam_tsp.py     (Local search)", "#89d185");
+                    appendTermLine("[5/8] 05_bfs_8_puzzle.py       (Uninformed search)", "#89d185");
+                    appendTermLine("[6/8] 06_water_jug_bfs.py      (State-space search)", "#89d185");
+                    appendTermLine("[7/8] 07_eight_queens.py       (Constraint satisfaction)", "#89d185");
+                    appendTermLine("[8/8] 08_rule_based_chatbot.py (Knowledge-based systems)", "#89d185");
+                    appendTermLine("[SUCCESS] Folder mounted: AI_LAB_PRACTICALS active in Explorer.", "#89d185");
+                    unlockWorkspace();
+                }, 250);
+                return;
+            }
+
+            // 2. Lock / Disguise triggers
+            if (lower === "lock" || lower === "hide" || lower === "close" || lower === "exit") {
+                appendTermLine("[*] Closing active folder and resetting workspace...", "#858585");
+                setTimeout(() => {
+                    resetToInitialState();
+                    appendTermLine("[OK] Workspace reverted to initial state (no folder opened).", "#89d185");
+                }, 150);
+                return;
+            }
+
+            // 3. Clear screen
+            if (lower === "cls" || lower === "clear") {
+                clearTerminalScreen();
+                return;
+            }
+
+            // 4. Directory list
+            if (lower === "ls" || lower === "dir") {
+                appendTermLine("    Directory: " + (isUnlocked ? "C:\\Users\\abhij\\AI_Lab_Practicals" : "C:\\Users\\abhij"), "#858585");
+                appendTermLine("Mode                 LastWriteTime         Length Name", "#858585");
+                appendTermLine("----                 -------------         ------ ----", "#858585");
+                if (!isUnlocked) {
+                    appendTermLine("d-----         10/18/2026  03:00 PM                Documents");
+                    appendTermLine("d-----         10/18/2026  03:00 PM                Downloads");
+                    appendTermLine("d-----         10/18/2026  03:00 PM                Projects");
+                } else {
+                    practicals.forEach(p => {
+                        appendTermLine(`-a----         10/18/2026  03:00 PM            ${p.code.length} ${p.title}`);
+                    });
+                    appendTermLine("-a----         10/18/2026  03:00 PM            650 PRACTICALS_GUIDE.md");
+                }
+                return;
+            }
+
+            // 5. Help command
+            if (lower === "help" || lower === "?") {
+                appendTermLine("PowerShell Utility Shell", "#3794ff");
+                appendTermLine("Available commands:", "#cccccc");
+                appendTermLine("  python <filename>   Run Python practical script", "#858585");
+                appendTermLine("  python lab.py       Open AI Lab Practicals workspace", "#858585");
+                appendTermLine("  code .              Open current workspace folder", "#858585");
+                appendTermLine("  ls / dir            List directory contents", "#858585");
+                appendTermLine("  clear / cls         Clear terminal buffer", "#858585");
+                appendTermLine("  close / lock        Close workspace folder", "#858585");
+                return;
+            }
+
+            // 6. Running practical scripts simulation
+            if (lower.startsWith("python 01_vacuum") || lower === "python 01") {
+                appendTermLine("Enter vacuum location (A/B): A", "#ce9178");
+                appendTermLine("Room A status (Clean/Dirty): Dirty", "#ce9178");
+                appendTermLine("Room B status (Clean/Dirty): Dirty", "#ce9178");
+                appendTermLine("Suck Room A", "#89d185");
+                appendTermLine("Move Right", "#89d185");
+                appendTermLine("Suck Room B", "#89d185");
+                appendTermLine("Both rooms are clean.", "#4ec9b0");
+                return;
+            }
+
+            if (lower.startsWith("python 03_tower") || lower === "python 03") {
+                appendTermLine("Enter number of disks: 3", "#ce9178");
+                appendTermLine("Move disk 1 from A to C", "#cccccc");
+                appendTermLine("Move disk 2 from A to B", "#cccccc");
+                appendTermLine("Move disk 1 from C to B", "#cccccc");
+                appendTermLine("Move disk 3 from A to C", "#cccccc");
+                appendTermLine("Move disk 1 from B to A", "#cccccc");
+                appendTermLine("Move disk 2 from B to C", "#cccccc");
+                appendTermLine("Move disk 1 from A to C", "#cccccc");
+                appendTermLine("[OK] Completed in 7 moves (2^3 - 1).", "#89d185");
+                return;
+            }
+
+            if (lower.startsWith("python 07_eight") || lower === "python 07") {
+                appendTermLine("Q . . . . . . .", "#dcdcaa");
+                appendTermLine(". . . . Q . . .", "#dcdcaa");
+                appendTermLine(". . . . . . . Q", "#dcdcaa");
+                appendTermLine(". . . . . Q . .", "#dcdcaa");
+                appendTermLine(". . Q . . . . .", "#dcdcaa");
+                appendTermLine(". . . . . . Q .", "#dcdcaa");
+                appendTermLine(". Q . . . . . .", "#dcdcaa");
+                appendTermLine(". . . Q . . . .", "#dcdcaa");
+                appendTermLine("[SUCCESS] 8-Queens safe arrangement found.", "#89d185");
+                return;
+            }
+
+            if (lower.startsWith("python")) {
+                appendTermLine(`Execution simulation finished for '${cmd.slice(7)}'.`, "#89d185");
+                return;
+            }
+
+            appendTermLine(`${cmd}: The term '${cmd}' is not recognized as a cmdlet, function, or script file.`, "#f48771");
+        }
+
+        terminalInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                const val = terminalInput.value;
+                terminalInput.value = "";
+                executeTerminalCommand(val);
+            } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    terminalInput.value = commandHistory[historyIndex] || "";
+                }
+            } else if (e.key === "ArrowDown") {
+                e.preventDefault();
+                if (historyIndex < commandHistory.length - 1) {
+                    historyIndex++;
+                    terminalInput.value = commandHistory[historyIndex] || "";
+                } else {
+                    historyIndex = commandHistory.length;
+                    terminalInput.value = "";
+                }
+            } else if (e.key === "Escape") {
+                terminalInput.value = "";
+            }
+        });
+
+        // ==========================================
+        // 9. COMMAND PALETTE (CTRL+P / CTRL+SHIFT+P)
+        // ==========================================
+
+        const commandPalette = document.getElementById("commandPalette");
+        const cpInput = document.getElementById("cpInput");
+        const cpList = document.getElementById("cpList");
+
+        const paletteCommands = [
+            { label: "File: Open Folder (AI Lab Practicals)", shortcut: "Ctrl+K Ctrl+O", action: () => unlockWorkspace() },
+            { label: "Python: Launch AI Lab Practicals (lab.py)", shortcut: "Ctrl+Alt+L", action: () => executeTerminalCommand("python lab.py") },
+            { label: "Python: Run Current File in Terminal", shortcut: "F5", action: () => runCurrentScript() },
+            { label: "File: Copy Current Code to Clipboard", shortcut: "Ctrl+C", action: () => copyActiveCode() },
+            { label: "View: Toggle Full Screen", shortcut: "F11", action: () => toggleFullScreen() },
+            { label: "View: Toggle Notes & Theory Panel", shortcut: "Ctrl+Alt+N", action: () => toggleNotesPanel() },
+            { label: "File: Close Folder", shortcut: "Ctrl+K F", action: () => resetToInitialState() },
+            { label: "Terminal: Clear Terminal Output", shortcut: "Ctrl+K", action: () => clearTerminalScreen() },
+            { label: "Terminal: Focus Terminal Window", shortcut: "Ctrl+`", action: () => focusTerminal() }
+        ];
+
+        function openCommandPalette() {
+            commandPalette.classList.add("open");
+            cpInput.value = "";
+            renderCommandList(paletteCommands);
+            cpInput.focus();
+        }
+
+        function closeCommandPalette() {
+            commandPalette.classList.remove("open");
+        }
+
+        function renderCommandList(list) {
+            cpList.innerHTML = "";
+            list.forEach((item, idx) => {
+                const row = document.createElement("div");
+                row.className = `cp-item ${idx === 0 ? 'selected' : ''}`;
+                row.innerHTML = `
+      <span>${escHtml(item.label)}</span>
+      <span class="cp-shortcut">${item.shortcut}</span>
+    `;
+                row.onclick = () => {
+                    closeCommandPalette();
+                    item.action();
+                };
+                cpList.appendChild(row);
+            });
+        }
+
+        cpInput.addEventListener("input", () => {
+            const q = cpInput.value.toLowerCase().replace(/^>\s*/, "");
+            const filtered = paletteCommands.filter(c => c.label.toLowerCase().includes(q));
+            renderCommandList(filtered);
+        });
+
+        cpInput.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                closeCommandPalette();
+            } else if (e.key === "Enter") {
+                const selected = cpList.querySelector(".cp-item.selected") || cpList.querySelector(".cp-item");
+                if (selected) selected.click();
+            }
+        });
+
+        // Global Shortcuts
+        window.addEventListener("keydown", (e) => {
+            if ((e.ctrlKey || e.metaKey) && (e.key === "p" || e.key === "P")) {
+                e.preventDefault();
+                openCommandPalette();
+            } else if (e.key === "F11") {
+                e.preventDefault();
+                toggleFullScreen();
+            } else if (e.key === "F5") {
+                e.preventDefault();
+                runCurrentScript();
+            } else if ((e.ctrlKey || e.metaKey) && e.key === "`") {
+                e.preventDefault();
+                focusTerminal();
+            } else if (e.key === "Escape") {
+                closeCommandPalette();
+            }
+        });
+
+        document.addEventListener("click", (e) => {
+            if (!commandPalette.contains(e.target) && !document.getElementById("searchBarBtn").contains(e.target)) {
+                closeCommandPalette();
+            }
+        });
+
+        function showHelpModal() {
+            openCommandPalette();
+        }
+
+        // ==========================================
+        // 10. INITIALIZATION
+        // ==========================================
+        renderUI();
+    </script>
+</body>
+
+</html>
