@@ -1307,7 +1307,36 @@
         ::-webkit-scrollbar-thumb:hover {
             background: rgba(100, 100, 100, 0.7);
         }
-    </style>
+    
+
+        /* Collapsible Explorer sidebar */
+        #sidebar {
+            width: 260px;
+            min-width: 0;
+            flex: 0 0 260px;
+            overflow: hidden;
+            transition: width 180ms ease, flex-basis 180ms ease, border-color 180ms ease;
+        }
+
+        #sidebar.is-collapsed {
+            width: 0;
+            flex-basis: 0;
+            border-right-color: transparent;
+        }
+
+        #sidebar.is-collapsed > * {
+            visibility: hidden;
+        }
+
+        #sidebarToggle[aria-expanded="false"] {
+            color: #ffffff;
+            background: #3c3c3c;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            #sidebar { transition: none; }
+        }
+</style>
 <meta name="description" content="An interactive VS Code-inspired workspace for AI lab practicals and Python revision.">
 <meta name="theme-color" content="#1e1e1e">
 <style id="vscode-polish-overrides">
@@ -1521,7 +1550,7 @@ button { -webkit-tap-highlight-color: transparent; }
             </div>
 
             <div class="title-right">
-                <button class="layout-btn" title="Toggle Primary Side Bar (Ctrl+B)" onclick="toggleSidebar()">
+                <button class="layout-btn" id="sidebarToggle" type="button" title="Toggle Primary Side Bar (Ctrl+B)" aria-label="Collapse Explorer sidebar" aria-controls="sidebar" aria-expanded="true" onclick="toggleSidebar()">
                     <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
                         <path
                             d="M1 3.5A1.5 1.5 0 0 1 2.5 2h11A1.5 1.5 0 0 1 15 3.5v9a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-9zM2.5 3a.5.5 0 0 0-.5.5V12.5a.5.5 0 0 0 .5.5H5V3H2.5zm3.5 10h7.5a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5H6v10z" />
@@ -3177,8 +3206,13 @@ ${p.algorithm}
         }
 
         function toggleSidebar() {
-            const sb = document.getElementById("sidebar");
-            sb.style.display = sb.style.display === "none" ? "flex" : "none";
+            const sidebar = document.getElementById("sidebar");
+            const toggle = document.getElementById("sidebarToggle");
+            const isCollapsed = sidebar.classList.toggle("is-collapsed");
+
+            toggle.setAttribute("aria-expanded", String(!isCollapsed));
+            toggle.setAttribute("aria-label", isCollapsed ? "Expand Explorer sidebar" : "Collapse Explorer sidebar");
+            toggle.title = isCollapsed ? "Show Explorer (Ctrl+B)" : "Hide Explorer (Ctrl+B)";
         }
 
         function switchPanelTab(tabName) {
